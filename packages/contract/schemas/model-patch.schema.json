@@ -1,0 +1,61 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semantic.platform/schema/model-patch.json",
+  "title": "ModelPatch",
+  "description": "对话式 harness 产出的可 diff 补丁。人工确认后才应发布到模型。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["apiVersion", "kind", "operations"],
+  "properties": {
+    "apiVersion": { "const": "semantic.platform/v1" },
+    "kind": { "const": "ModelPatch" },
+    "operations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["op", "targetKind", "id"],
+        "properties": {
+          "op": { "enum": ["add", "remove", "replace"] },
+          "targetKind": {
+            "enum": [
+              "Namespace",
+              "Entity",
+              "Relation",
+              "Metric",
+              "Policy",
+              "Action",
+              "ScenarioBrief",
+              "GapLog",
+              "CasePack",
+              "EvalCase",
+              "SourceMapping"
+            ]
+          },
+          "id": { "$ref": "https://semantic.platform/schema/defs.json#/$defs/id" },
+          "document": { "type": "object" }
+        },
+        "allOf": [
+          {
+            "if": {
+              "properties": { "op": { "const": "remove" } },
+              "required": ["op"]
+            },
+            "then": {
+              "properties": { "document": false }
+            }
+          },
+          {
+            "if": {
+              "properties": { "op": { "enum": ["add", "replace"] } },
+              "required": ["op"]
+            },
+            "then": {
+              "required": ["document"]
+            }
+          }
+        ]
+      }
+    }
+  }
+}

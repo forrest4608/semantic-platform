@@ -1,0 +1,12 @@
+apiVersion: semantic.platform/v1
+kind: Namespace
+metadata:
+  id: hr.leave
+  name: 假期
+  namespace: hr.leave
+  description: 员工假期业务域。此示例只用于契约校验，不代表完整的人力资源制度。
+spec:
+  domain: hr
+  version: 0.1.0
+  owners:
+    - hr-ops

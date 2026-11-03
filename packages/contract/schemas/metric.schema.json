@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semantic.platform/schema/metric.json",
+  "title": "Metric",
+  "description": "指标定义。expression 是作者文本，M0 不解释、不执行。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["apiVersion", "kind", "metadata", "spec"],
+  "properties": {
+    "apiVersion": { "const": "semantic.platform/v1" },
+    "kind": { "const": "Metric" },
+    "metadata": { "$ref": "https://semantic.platform/schema/defs.json#/$defs/metadata" },
+    "spec": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["entity", "expression"],
+      "properties": {
+        "entity": { "$ref": "https://semantic.platform/schema/defs.json#/$defs/id" },
+        "expression": { "type": "string", "minLength": 1 },
+        "aggregation": {
+          "enum": ["none", "sum", "count", "avg", "min", "max"]
+        },
+        "unit": { "type": "string", "minLength": 1 },
+        "timeDimension": { "type": "string", "minLength": 1 },
+        "filters": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,25 @@
+apiVersion: semantic.platform/v1
+kind: SourceMapping
+metadata:
+  id: hr.leave.map.LeaveRequest
+  name: 请假申请映射
+  namespace: hr.leave
+  description: LeaveRequest 到来源系统的字段对应关系。M0 不读取该系统。
+spec:
+  objectRef: hr.leave.LeaveRequest
+  source:
+    system: hris
+    locator: hr.leave_requests
+  fieldMappings:
+    - semantic: request_id
+      physical: req_id
+    - semantic: employee_id
+      physical: emp_id
+    - semantic: status
+      physical: status
+    - semantic: days
+      physical: days
+    - semantic: approved_by
+      physical: approved_by
+    - semantic: approved_at
+      physical: approved_at

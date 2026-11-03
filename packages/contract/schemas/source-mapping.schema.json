@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semantic.platform/schema/source-mapping.json",
+  "title": "SourceMapping",
+  "description": "语义对象到外部来源的映射。M0 不连接真实系统。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["apiVersion", "kind", "metadata", "spec"],
+  "properties": {
+    "apiVersion": { "const": "semantic.platform/v1" },
+    "kind": { "const": "SourceMapping" },
+    "metadata": { "$ref": "https://semantic.platform/schema/defs.json#/$defs/metadata" },
+    "spec": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["objectRef", "source", "fieldMappings"],
+      "properties": {
+        "objectRef": { "$ref": "https://semantic.platform/schema/defs.json#/$defs/id" },
+        "source": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["system", "locator"],
+          "properties": {
+            "system": { "type": "string", "minLength": 1 },
+            "locator": {
+              "type": "string",
+              "minLength": 1,
+              "description": "来源系统内的定位符，例如 schema.table。不限定某家数据库。"
+            }
+          }
+        },
+        "fieldMappings": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["semantic", "physical"],
+            "properties": {
+              "semantic": { "type": "string", "minLength": 1 },
+              "physical": { "type": "string", "minLength": 1 }
+            }
+          }
+        }
+      }
+    }
+  }
+}
