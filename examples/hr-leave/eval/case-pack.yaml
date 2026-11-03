@@ -1,0 +1,31 @@
+apiVersion: semantic.platform/v1
+kind: CasePack
+metadata:
+  id: hr.leave.casepack.v1
+  name: 假期黄金用例
+  namespace: hr.leave
+  description: 针对需求目标 G1 到 G3 的黄金问答，用于契约回归。
+spec:
+  scenarioBrief: hr.leave.brief.remaining
+  cases:
+    - id: EC-1
+      question: 张三还剩多少天年假？
+      expectedAnswer: 按员工 Employee 上的指标 remaining_leave_days 回答，即年假额度减去已使用年假。
+      expectedObjects:
+        - hr.leave.Employee
+        - hr.leave.remaining_leave_days
+      golden: true
+    - id: EC-2
+      question: 张三有哪些请假申请，当前状态是什么？
+      expectedAnswer: 读取 LeaveRequest，并通过关系 employee 关联到 Employee；状态来自 LeaveRequest.status。
+      expectedObjects:
+        - hr.leave.LeaveRequest
+        - hr.leave.LeaveRequest.employee
+      golden: true
+    - id: EC-3
+      question: 主管能否批准一条待审批的请假？
+      expectedAnswer: 可以发起动作 ApproveLeave。前置条件要求状态为 pending，且需要 hr_admin 确认后才写回 LeaveRequest。
+      expectedObjects:
+        - hr.leave.ApproveLeave
+        - hr.leave.LeaveRequest
+      golden: true

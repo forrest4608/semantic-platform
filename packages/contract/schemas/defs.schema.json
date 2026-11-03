@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semantic.platform/schema/defs.json",
+  "title": "共享定义",
+  "$defs": {
+    "id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 160,
+      "pattern": "^[A-Za-z][A-Za-z0-9_.-]*$",
+      "description": "稳定标识。建议使用 Namespace 前缀，例如 hr.leave.Employee。"
+    },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "namespace"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "name": { "type": "string", "minLength": 1, "maxLength": 200 },
+        "namespace": {
+          "$ref": "#/$defs/id",
+          "description": "所属业务域 Namespace 的 id。Namespace 自身的该字段等于自己的 id。"
+        },
+        "description": { "type": "string", "maxLength": 4000 }
+      }
+    },
+    "evalCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "黄金问答用例。问句绑定到契约对象，M0 不执行查询。",
+      "required": ["id", "question", "expectedAnswer", "expectedObjects", "golden"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "question": { "type": "string", "minLength": 1 },
+        "expectedAnswer": { "type": "string", "minLength": 1 },
+        "expectedObjects": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/id" },
+          "description": "回答该问句所依赖的契约对象 id。"
+        },
+        "golden": {
+          "type": "boolean",
+          "description": "为 true 时纳入回归。false 表示草稿，评测命令会跳过。"
+        },
+        "notes": { "type": "string" }
+      }
+    }
+  }
+}

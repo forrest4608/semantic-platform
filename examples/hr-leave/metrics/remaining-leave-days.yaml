@@ -1,0 +1,12 @@
+apiVersion: semantic.platform/v1
+kind: Metric
+metadata:
+  id: hr.leave.remaining_leave_days
+  name: remaining_leave_days
+  namespace: hr.leave
+  description: 员工剩余年假天数
+spec:
+  entity: hr.leave.Employee
+  expression: annual_leave_quota - used_leave_days
+  aggregation: none
+  unit: day

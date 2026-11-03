@@ -1,0 +1,35 @@
+apiVersion: semantic.platform/v1
+kind: Entity
+metadata:
+  id: hr.leave.LeaveRequest
+  name: LeaveRequest
+  namespace: hr.leave
+  description: 请假申请
+spec:
+  primaryKey:
+    - request_id
+  attributes:
+    - name: request_id
+      type: string
+      description: 申请单号
+      required: true
+    - name: employee_id
+      type: string
+      description: 申请人员工编号
+      required: true
+    - name: status
+      type: string
+      description: 审批状态，例如 pending 或 approved
+      required: true
+    - name: days
+      type: number
+      description: 请假天数
+      required: true
+    - name: approved_by
+      type: string
+      description: 最终确认人
+      required: false
+    - name: approved_at
+      type: datetime
+      description: 确认时间
+      required: false

@@ -1,0 +1,15 @@
+apiVersion: semantic.platform/v1
+kind: GapLog
+metadata:
+  id: hr.leave.gap.001
+  name: 假期口径待确认
+  namespace: hr.leave
+  description: 材料没有写清的口径。构建时应回到业务侧提问，而不是自行补全。
+spec:
+  items:
+    - id: GAP-1
+      kind: unknown
+      description: 病假是否计入 remaining_leave_days，现有材料没有说明
+      status: open
+      relatedGoals:
+        - G1

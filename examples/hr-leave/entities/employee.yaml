@@ -1,0 +1,27 @@
+apiVersion: semantic.platform/v1
+kind: Entity
+metadata:
+  id: hr.leave.Employee
+  name: Employee
+  namespace: hr.leave
+  description: 员工
+spec:
+  primaryKey:
+    - employee_id
+  attributes:
+    - name: employee_id
+      type: string
+      description: 员工编号
+      required: true
+    - name: name
+      type: string
+      description: 姓名
+      required: true
+    - name: annual_leave_quota
+      type: number
+      description: 年度年假额度，单位为天
+      required: true
+    - name: used_leave_days
+      type: number
+      description: 已使用年假天数
+      required: true

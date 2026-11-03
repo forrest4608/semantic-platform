@@ -1,0 +1,172 @@
+:root {
+  color: #1c1915;
+  background: #f3efe6;
+  font-family: "Songti SC", "Noto Serif SC", "Source Han Serif SC", "Palatino Linotype", Palatino, serif;
+  line-height: 1.5;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+}
+
+button,
+textarea,
+code {
+  font-family: "IBM Plex Sans", "Noto Sans SC", "Source Han Sans SC", "PingFang SC", sans-serif;
+}
+
+.shell {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 32px 20px 64px;
+}
+
+.top {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  align-items: flex-start;
+}
+
+.eyebrow {
+  margin: 0;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-size: 12px;
+  font-family: "IBM Plex Sans", "Noto Sans SC", sans-serif;
+  color: #6d6458;
+}
+
+h1 {
+  margin: 4px 0 0;
+  font-size: 32px;
+  font-weight: 600;
+}
+
+h2 {
+  margin: 0 0 8px;
+  font-size: 24px;
+}
+
+.lead {
+  margin-top: 0;
+  color: #3f3830;
+}
+
+.nav {
+  display: flex;
+  gap: 8px;
+  margin: 24px 0;
+  border-bottom: 1px solid #d9d0c3;
+}
+
+.nav a {
+  color: #1c1915;
+  text-decoration: none;
+  padding: 8px 12px;
+  font-family: "IBM Plex Sans", "Noto Sans SC", sans-serif;
+}
+
+.nav a[aria-current="page"] {
+  border-bottom: 2px solid #0f5c56;
+  color: #0f5c56;
+}
+
+.auth {
+  max-width: 360px;
+  text-align: right;
+}
+
+.auth button {
+  margin-left: 8px;
+  margin-bottom: 8px;
+  background: #fffdf8;
+  border: 1px solid #c9bfb0;
+  padding: 6px 10px;
+  cursor: pointer;
+}
+
+.auth button:hover {
+  border-color: #0f5c56;
+}
+
+.session,
+.hint,
+.reply,
+.empty {
+  font-family: "IBM Plex Sans", "Noto Sans SC", sans-serif;
+  font-size: 14px;
+}
+
+.hint {
+  color: #6d6458;
+}
+
+.empty,
+.reply {
+  background: #fffdf8;
+  border: 1px solid #e2d8c8;
+  padding: 16px;
+}
+
+.catalog {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+
+.catalog li {
+  display: grid;
+  grid-template-columns: 8em 11em 1fr;
+  gap: 12px;
+  align-items: baseline;
+  background: #fffdf8;
+  border: 1px solid #e2d8c8;
+  padding: 10px 12px;
+}
+
+label {
+  display: block;
+  margin-bottom: 6px;
+  font-family: "IBM Plex Sans", "Noto Sans SC", sans-serif;
+}
+
+textarea {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #c9bfb0;
+  background: #fffdf8;
+  resize: vertical;
+}
+
+form button {
+  margin-top: 10px;
+  background: #0f5c56;
+  color: #f7f3ea;
+  border: 0;
+  padding: 8px 14px;
+  cursor: pointer;
+}
+
+@media (max-width: 720px) {
+  .top {
+    flex-direction: column;
+  }
+
+  .auth {
+    text-align: left;
+    max-width: none;
+  }
+
+  .auth button {
+    margin-left: 0;
+    margin-right: 8px;
+  }
+
+  .catalog li {
+    grid-template-columns: 1fr;
+  }
+}

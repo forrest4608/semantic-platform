@@ -1,0 +1,28 @@
+{
+  "name": "semantic-platform",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Enterprise semantic platform — M0 contract scaffold",
+  "packageManager": "pnpm@10.33.4",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "lint": "tsc -p packages/contract --noEmit && tsc -p packages/kernel --noEmit && tsc -p packages/cli --noEmit && tsc -p packages/mcp-server --noEmit && tsc -p packages/workbench --noEmit && node scripts/check-terminology.mjs",
+    "test": "vitest run",
+    "validate:examples": "node packages/cli/src/index.ts validate examples/hr-leave",
+    "eval:examples": "node packages/cli/src/index.ts eval examples/hr-leave",
+    "export:examples": "node packages/cli/src/index.ts export-osi examples/hr-leave",
+    "dev:workbench": "pnpm --filter @semantic/workbench dev",
+    "build:workbench": "pnpm --filter @semantic/workbench build",
+    "mcp": "node packages/mcp-server/src/index.ts"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": ["esbuild"]
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.3",
+    "typescript": "5.9.3",
+    "vitest": "3.2.7"
+  }
+}
