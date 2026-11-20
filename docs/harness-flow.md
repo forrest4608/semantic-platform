@@ -13,3 +13,11 @@
 7. **人工确认发布。** 审阅 diff 出来的补丁。确认后才发布。未关闭的 GapLog 会留在模型里，提醒还有待澄清的问题；M0 不因此自动阻断发布，这条规则以后再定。
 
 M0 没有实现这个循环本身，只有它要读写的对象、补丁和评测命令。
+
+## M1 对话内核
+
+`packages/harness` 是我们自己的接口。它固定包装 DeepSeek Harness `@deepseek-ai/dsh@0.2.2-rc.5`（标签 `dsh-v0.2.2-rc.5`，Cordis 插件架构）。这个包要求 Node 24，本仓库的测试和默认运行都不加载它，也不调用火山方舟。
+
+模型地址和模型名写在 `config/llm.example.yaml`，可以用 `LLM_BASE_URL`、`LLM_MODEL` 覆盖。密钥只读 `ARK_API_KEY`，不进配置对象，也不进日志。
+
+harness 只能提议。补丁先过内核的 schema。`confirmRelease` 单独接受人的确认，然后才把补丁应用到内存模型。默认插件清单里的工具全是读工具。写工具和业务系统写入不能从提议接口里发生。

@@ -1,0 +1,20 @@
+apiVersion: semantic.platform/v1
+kind: ScenarioBrief
+metadata:
+  id: hr.leave.brief.approval
+  name: 年假是否需人事审批
+  namespace: hr.leave
+  description: 张三周五至下周一请假。只构建支撑这三个需求目标的对象。
+spec:
+  goals:
+    - id: G1
+      statement: 查剩余年假
+      priority: must
+    - id: G2
+      statement: 判断是否需人事审批
+      priority: must
+    - id: G3
+      statement: 提交/批准请假
+      priority: must
+  sources:
+    - 《请假管理办法》第 5 条

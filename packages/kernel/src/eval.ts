@@ -1,8 +1,10 @@
 /**
- * 黄金用例打分（占位）。
- * 只检查问句、期望答案，以及 expectedObjects 是否仍在契约中。
+ * 黄金用例打分。
+ * 原有检查仍然保留：问句、期望答案，以及 expectedObjects 是否仍在契约中。
+ * 带口径对照或版本干扰标记的用例，再按发布门禁核对工具回执。
  * 不连接查询引擎，也不生成自然语言回答。
  */
+import { assessTeachingCase, type KnownFailureVerdict, type ReleaseVerdict } from "./gate.ts";
 import { documentsOf, isRecord, stringField, stringList } from "./model.ts";
 import type { SemanticModel } from "./types.ts";
 
@@ -15,6 +17,7 @@ export interface EvalCaseScore {
   passed: boolean;
   score: number;
   notes: string[];
+  releaseGate?: ReleaseVerdict & { knownFailures: KnownFailureVerdict[] };
 }
 
 export interface EvalReport {
@@ -33,6 +36,7 @@ interface RawCase {
   expectedObjects: string[];
   golden: boolean;
   packId?: string;
+  spec: Record<string, unknown>;
 }
 
 export function evaluateModel(model: SemanticModel): EvalReport {
@@ -67,6 +71,7 @@ function collectCases(model: SemanticModel): RawCase[] {
         expectedObjects: stringList(item.expectedObjects),
         golden: item.golden === true,
         packId: pack.metadata.id,
+        spec: item,
       });
     }
   }
@@ -77,6 +82,7 @@ function collectCases(model: SemanticModel): RawCase[] {
       expectedAnswer: stringField(document.spec, "expectedAnswer") ?? "",
       expectedObjects: stringList(document.spec.expectedObjects),
       golden: document.spec.golden === true,
+      spec: document.spec,
     });
   }
   return cases;
@@ -118,6 +124,13 @@ function scoreCase(model: SemanticModel, item: RawCase): EvalCaseScore {
     else notes.push(`契约中不存在 ${objectId}`);
   }
 
+  const teaching = assessTeachingCase(model, item.id, item.spec);
+  if (teaching) {
+    checks += 1;
+    if (teaching.notes.length === 0) hits += 1;
+    else notes.push(...teaching.notes);
+  }
+
   const score = checks === 0 ? 0 : hits / checks;
   return {
     caseId: item.id,
@@ -128,5 +141,6 @@ function scoreCase(model: SemanticModel, item: RawCase): EvalCaseScore {
     passed: notes.length === 0,
     score,
     notes,
+    ...(teaching ? { releaseGate: teaching.releaseGate } : {}),
   };
 }

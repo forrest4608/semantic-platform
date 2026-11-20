@@ -70,7 +70,8 @@ describe("CLI 进程", () => {
       encoding: "utf8",
     });
     expect(evalRun.status).toBe(0);
-    expect(evalRun.stdout).toContain("通过 3");
+    expect(evalRun.stdout).toContain("通过 4");
+    expect(evalRun.stdout).toContain("PASS eval_hr_001");
   });
 });
 

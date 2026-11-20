@@ -1,0 +1,23 @@
+apiVersion: semantic.platform/v1
+kind: Entity
+metadata:
+  id: finance.Trip
+  name: Trip
+  namespace: finance
+  description: 出差单
+spec:
+  primaryKey:
+    - trip_id
+  attributes:
+    - name: trip_id
+      type: string
+      required: true
+    - name: employee_id
+      type: string
+      required: true
+    - name: destination
+      type: string
+      required: true
+    - name: span_label
+      type: string
+      required: true

@@ -1,0 +1,13 @@
+apiVersion: semantic.platform/v1
+kind: Relation
+metadata:
+  id: finance.Trip.employee
+  name: employee
+  namespace: finance
+  description: 员工发起出差
+spec:
+  from: finance.Trip
+  to: finance.Employee
+  cardinality: many_to_one
+  fromAttribute: employee_id
+  toAttribute: employee_id

@@ -1,0 +1,17 @@
+apiVersion: semantic.platform/v1
+kind: Entity
+metadata:
+  id: finance.Employee
+  name: Employee
+  namespace: finance
+  description: 报销申请人
+spec:
+  primaryKey:
+    - employee_id
+  attributes:
+    - name: employee_id
+      type: string
+      required: true
+    - name: name
+      type: string
+      required: true

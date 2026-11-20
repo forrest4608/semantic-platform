@@ -96,7 +96,10 @@ function formatEval(report: EvalReport): string {
   const lines = report.results.map((item) => {
     const state = item.skipped ? "SKIP" : item.passed ? "PASS" : "FAIL";
     const notes = item.notes.length > 0 ? ` ${item.notes.join("；")}` : "";
-    return `${state} ${item.caseId} score=${item.score.toFixed(2)} ${item.question}${notes}`;
+    const gate = item.releaseGate
+      ? ` 门禁[口径${item.releaseGate.basisCorrect ? "对" : "错"} 版本${item.releaseGate.versionCorrect ? "对" : "错"} 证据${item.releaseGate.citationCorrect ? "对" : "错"} 回执${item.releaseGate.receiptComplete ? "对" : "错"}]`
+      : "";
+    return `${state} ${item.caseId} score=${item.score.toFixed(2)} ${item.question}${gate}${notes}`;
   });
   lines.push(
     `汇总：通过 ${report.passed}，失败 ${report.failed}，跳过 ${report.skipped}，平均分 ${report.meanScore.toFixed(2)}`,

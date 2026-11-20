@@ -1,0 +1,17 @@
+apiVersion: semantic.platform/v1
+kind: Policy
+metadata:
+  id: finance.policy.no_superseded
+  name: 禁止采用废止版本
+  namespace: finance
+  description: 版本选择看业务发生时点，不看哪条检索片段更宽。
+spec:
+  effect: deny
+  subjects:
+    - type: role
+      value: agent
+  resources:
+    - finance.meal.2022
+  operations:
+    - invoke
+  condition: 禁止采用废止版本；选版看业务发生时点

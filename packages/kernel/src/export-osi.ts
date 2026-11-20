@@ -1,6 +1,6 @@
 /**
  * OSI 导出接口。内部模型是 OSI 的超集：
- * Action、Policy、EvalCase、GapLog 放在 extensions，不假装已被 OSI 覆盖。
+ * Action、Policy、EvalCase、GapLog、Rule 放在 extensions，不假装已被 OSI 覆盖。
  * M0 不对照某一版 OSI 规范逐字段对齐。
  */
 import { documentsOf, stringField, stringList } from "./model.ts";
@@ -54,6 +54,7 @@ export interface OsiExportDocument {
     evalCases: string[];
     gapLogs: string[];
     sourceMappings: string[];
+    rules: string[];
   };
 }
 
@@ -76,6 +77,7 @@ export class StubOsiExporter implements OsiExporter {
         evalCases: evalCaseIds(model),
         gapLogs: idsOf(model, "GapLog"),
         sourceMappings: idsOf(model, "SourceMapping"),
+        rules: idsOf(model, "Rule"),
       },
     };
   }

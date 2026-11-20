@@ -14,6 +14,7 @@ export const OBJECT_KINDS = [
   "CasePack",
   "EvalCase",
   "SourceMapping",
+  "Rule",
 ] as const;
 
 export type ObjectKind = (typeof OBJECT_KINDS)[number];
@@ -34,6 +35,7 @@ const SCHEMA_IDS: Record<ObjectKind, string> = {
   CasePack: "https://semantic.platform/schema/case-pack.json",
   EvalCase: "https://semantic.platform/schema/eval-case.json",
   SourceMapping: "https://semantic.platform/schema/source-mapping.json",
+  Rule: "https://semantic.platform/schema/rule.json",
 };
 
 export const MODEL_PATCH_SCHEMA_ID = "https://semantic.platform/schema/model-patch.json";

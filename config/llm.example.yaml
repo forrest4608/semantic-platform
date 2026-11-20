@@ -1,0 +1,5 @@
+# 火山方舟。密钥不要写在这个文件里，只从环境变量 ARK_API_KEY 读取。
+provider: volcengine-ark
+baseUrl: https://ark.cn-beijing.volces.com/api/plan/v3
+model: deepseek-v4.1-flash
+apiKeyEnv: ARK_API_KEY

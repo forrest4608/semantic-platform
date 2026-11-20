@@ -1,0 +1,25 @@
+apiVersion: semantic.platform/v1
+kind: Action
+metadata:
+  id: finance.SubmitExpense
+  name: SubmitExpense
+  namespace: finance
+  description: 提交报销单。写入须经财务审批门禁。
+spec:
+  preconditions:
+    - expression: 可报金额来自现行规则的计算回执
+      description: 不能把已废止限额写进报销单
+  permissions:
+    - role: employee
+      description: 申请人可以发起提交
+  approval:
+    required: true
+    approverRoles:
+      - finance
+    description: 写入须经财务审批门禁
+  writeBack:
+    target: finance.ExpenseClaim
+    operation: insert
+    fields:
+      - status
+      - reimbursable_amount
