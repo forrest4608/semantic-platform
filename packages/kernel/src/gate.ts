@@ -130,7 +130,14 @@ function judgeTrace(
   const expected = isRecord(spec.expected) ? spec.expected : {};
   let basisCorrect = basisMatches(expected, trace);
   let versionCorrect = versionMatches(model, spec, trace, fromTool);
-  const violations = policyViolations(model, stringField(spec, "rule"), trace);
+  const asOf = stringField(spec, "asOf");
+  const subjectType = stringField(spec, "subjectType");
+  const violations = policyViolations(
+    model,
+    stringField(spec, "rule"),
+    trace,
+    asOf && subjectType ? { asOf, subjectType } : undefined,
+  );
   if (violations.includes("forbid_basis") || violations.includes("approval")) basisCorrect = false;
   if (violations.includes("forbid_superseded")) versionCorrect = false;
   const citationCorrect = trace.citation === expected.citation && expected.citation !== undefined;

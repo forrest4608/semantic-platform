@@ -4,6 +4,7 @@
  */
 import { documentsOf, isRecord, stringField } from "./model.ts";
 import { ModelError, type SemanticModel } from "./types.ts";
+import { queryRuleVersion } from "./version.ts";
 
 export interface PolicyTrace {
   basis?: string;
@@ -30,9 +31,15 @@ export function approvalRequiredByPolicy(
 
 /**
  * 返回这条轨迹违反的策略种类。
- * 自然日不能拿来触发人事审批；未超过工作日门槛时不得要求人事审批；已废止规则不能当计算依据。
+ * 自然日不能拿来触发人事审批；未超过工作日门槛时不得要求人事审批。
+ * 已废止只按业务发生时点判断，废止日之前仍可使用该版本。
  */
-export function policyViolations(model: SemanticModel, caseRuleId: string | undefined, trace: PolicyTrace): string[] {
+export function policyViolations(
+  model: SemanticModel,
+  caseRuleId: string | undefined,
+  trace: PolicyTrace,
+  at?: { asOf: string; subjectType: string },
+): string[] {
   const violations: string[] = [];
   const subjectRuleId = trace.ruleId ?? caseRuleId;
   for (const item of structuredChecks(model)) {
@@ -40,7 +47,7 @@ export function policyViolations(model: SemanticModel, caseRuleId: string | unde
     if (check.kind === "forbid_basis" && check.rule === subjectRuleId && trace.basis === check.basis) {
       violations.push("forbid_basis");
     }
-    if (check.kind === "forbid_superseded" && trace.ruleId === check.rule) {
+    if (check.kind === "forbid_superseded" && typeof trace.ruleId === "string" && trace.ruleId === check.rule && supersededAt(model, trace.ruleId, at)) {
       violations.push("forbid_superseded");
     }
     if (check.kind === "require_approval_when_exceeded" && check.rule === subjectRuleId) {
@@ -64,6 +71,19 @@ function approvalDecisionMismatches(
   if (trace.basis !== ruleBasis) return false;
   if (typeof trace.countedDays !== "number" || typeof trace.requiresHrApproval !== "boolean") return false;
   return trace.requiresHrApproval !== trace.countedDays > threshold;
+}
+
+function supersededAt(
+  model: SemanticModel,
+  ruleId: string,
+  at: { asOf: string; subjectType: string } | undefined,
+): boolean {
+  if (!at) return false;
+  try {
+    return queryRuleVersion(model, { ruleId, subjectType: at.subjectType, asOf: at.asOf }).status === "superseded";
+  } catch {
+    return false;
+  }
 }
 
 function structuredChecks(model: SemanticModel): Array<{ check: Record<string, unknown> }> {

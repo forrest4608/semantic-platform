@@ -384,10 +384,40 @@ describe("策略与人授权分开", () => {
       required: true,
       approverRoles: ["finance"],
     });
-    expect(policyViolations(finance, "finance.meal.2025", { ruleId: "finance.meal.2022", inForce: false })).toContain(
-      "forbid_superseded",
-    );
-    expect(policyViolations(finance, "finance.meal.2025", { ruleId: "finance.meal.2025", inForce: true })).toEqual([]);
+    expect(
+      policyViolations(
+        finance,
+        "finance.meal.2025",
+        { ruleId: "finance.meal.2022" },
+        { asOf: "2025-01-01", subjectType: "员工" },
+      ),
+    ).toContain("forbid_superseded");
+    expect(
+      policyViolations(
+        finance,
+        "finance.meal.2025",
+        { ruleId: "finance.meal.2022" },
+        { asOf: "2024-12-31", subjectType: "员工" },
+      ),
+    ).not.toContain("forbid_superseded");
+    expect(
+      quoteLimit(finance, {
+        ruleId: "finance.meal.2022",
+        asOf: "2024-12-31",
+        subjectType: "员工",
+        spanLabel: "周三至周五",
+        days: [
+          { label: "周三", kind: "working_day" },
+          { label: "周四", kind: "working_day" },
+          { label: "周五", kind: "working_day" },
+        ],
+        personCount: 1,
+        invoiceAmount: 420,
+        departureIncluded: true,
+        returnIncluded: true,
+      }).unitAmount,
+    ).toBe(150);
+    expect(policyViolations(finance, "finance.meal.2025", { ruleId: "finance.meal.2025" })).toEqual([]);
     expect(validateModel(model).ok).toBe(true);
     expect(validateModel(finance).ok).toBe(true);
   });
