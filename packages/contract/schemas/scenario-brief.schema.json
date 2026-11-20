@@ -13,7 +13,7 @@
     "spec": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["goals"],
+      "required": ["goals", "project"],
       "properties": {
         "goals": {
           "type": "array",
@@ -32,6 +32,10 @@
               "priority": { "enum": ["must", "should", "could"] }
             }
           }
+        },
+        "project": {
+          "$ref": "https://semantic.platform/schema/defs.json#/$defs/id",
+          "description": "本场景所属的项目，须与所在 Namespace 的项目相同。"
         },
         "sources": {
           "type": "array",

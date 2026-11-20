@@ -77,7 +77,10 @@ describe("写工具停在审批门后", () => {
     const blocked = approveLeave(model, "hr.leave.ApproveLeave");
     expect(blocked.ok).toBe(false);
     expect(blocked.error.code).toBe("approval_required");
-    const held = approveLeave(model, "hr.leave.ApproveLeave", { approvedBy: "人事", role: "hr_admin" });
+    const asHr = approveLeave(model, "hr.leave.ApproveLeave", { approvedBy: "人事", role: "hr_admin" });
+    expect(asHr.ok).toBe(false);
+    expect(asHr.error.code).toBe("approval_required");
+    const held = approveLeave(model, "hr.leave.ApproveLeave", { approvedBy: "主管", role: "manager" });
     expect(held.ok).toBe(false);
     expect(held.error.code).toBe("not_executed");
     expect(canonical(model.documents)).toBe(before);

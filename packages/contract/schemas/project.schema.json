@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semantic.platform/schema/project.json",
+  "title": "Project",
+  "description": "项目。属于一家公司。场景落在项目里，不跨项目上收口径。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["apiVersion", "kind", "metadata", "spec"],
+  "properties": {
+    "apiVersion": { "const": "semantic.platform/v1" },
+    "kind": { "const": "Project" },
+    "metadata": { "$ref": "https://semantic.platform/schema/defs.json#/$defs/metadata" },
+    "spec": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["company"],
+      "properties": {
+        "company": {
+          "$ref": "https://semantic.platform/schema/defs.json#/$defs/id",
+          "description": "所属公司的 id。"
+        }
+      }
+    }
+  }
+}

@@ -14,6 +14,8 @@ spec:
     - finance.ExpenseClaim
     - finance.Invoice
     - finance.meal.2025
+    - finance.policy.no_superseded
+    - finance.policy.write_human
     - finance.SubmitExpense
   golden: true
   caseClass: version_interference

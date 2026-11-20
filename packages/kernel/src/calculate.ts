@@ -5,6 +5,7 @@
 import { isRecord, stringField } from "./model.ts";
 import { loadCase, readDays, readFacts, requireClass, requireText, type DayMark } from "./cases.ts";
 import { ModelError, type SemanticDocument, type SemanticModel, type ValidationIssue } from "./types.ts";
+import { approvalRequiredByPolicy } from "./policy-check.ts";
 import { findInForceRule, queryRuleVersion, ruleDocument, type RuleVersion } from "./version.ts";
 
 export type { DayMark };
@@ -23,6 +24,7 @@ export interface CalculationReceipt {
   countedDays: number;
   excludedDayLabels: string[];
   thresholdValue?: number;
+  thresholdExceeded?: boolean;
   requiresHrApproval?: boolean;
   remainingLeaveDays?: number;
   unitAmount?: number;
@@ -85,6 +87,7 @@ export function quoteLeave(model: SemanticModel, input: LeaveQuoteInput): Calcul
   }
   if (threshold.unit !== basis) throw new ModelError("门槛单位与计算基准不一致");
   if (typeof input.remainingLeaveDays !== "number") throw new ModelError("缺少剩余年假");
+  const thresholdExceeded = counted.countedDays > threshold.value;
   return {
     tool: "get_leave_days",
     ...versionFields(version, citationOf(rule), basis),
@@ -92,7 +95,8 @@ export function quoteLeave(model: SemanticModel, input: LeaveQuoteInput): Calcul
     countedDays: counted.countedDays,
     excludedDayLabels: counted.excludedDayLabels,
     thresholdValue: threshold.value,
-    requiresHrApproval: counted.countedDays > threshold.value,
+    thresholdExceeded,
+    requiresHrApproval: approvalRequiredByPolicy(model, version.ruleId, thresholdExceeded),
     remainingLeaveDays: input.remainingLeaveDays,
   };
 }

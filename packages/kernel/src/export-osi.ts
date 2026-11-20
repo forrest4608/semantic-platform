@@ -55,6 +55,8 @@ export interface OsiExportDocument {
     gapLogs: string[];
     sourceMappings: string[];
     rules: string[];
+    companies: string[];
+    projects: string[];
   };
 }
 
@@ -78,6 +80,8 @@ export class StubOsiExporter implements OsiExporter {
         gapLogs: idsOf(model, "GapLog"),
         sourceMappings: idsOf(model, "SourceMapping"),
         rules: idsOf(model, "Rule"),
+        companies: idsOf(model, "Company"),
+        projects: idsOf(model, "Project"),
       },
     };
   }

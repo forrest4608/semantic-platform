@@ -1,0 +1,22 @@
+apiVersion: semantic.platform/v1
+kind: Policy
+metadata:
+  id: hr.leave.policy.hr_approval
+  name: 超过工作日门槛须人事审批
+  namespace: hr.leave
+  description: 是否须人事审批由本策略决定。门槛天数在 Rule 上，这里不另写数字。未超过门槛时不得要求人事审批。
+spec:
+  effect: deny
+  subjects:
+    - type: role
+      value: agent
+  resources:
+    - hr.leave.rule.approval
+  operations:
+    - invoke
+  condition: 未超过工作日门槛时不得要求人事审批；超过门槛时须由 hr_admin 确认
+  check:
+    kind: require_approval_when_exceeded
+    rule: hr.leave.rule.approval
+    approverRoles:
+      - hr_admin

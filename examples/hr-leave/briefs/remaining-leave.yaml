@@ -6,6 +6,7 @@ metadata:
   namespace: hr.leave
   description: 由业务场景描述整理出的需求目标，用来决定本域要构建哪些语义对象。
 spec:
+  project: fixture.teaching.leave
   goals:
     - id: G1
       statement: 员工可以查询本人剩余年假天数

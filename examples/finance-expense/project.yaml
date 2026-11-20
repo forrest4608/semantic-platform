@@ -1,0 +1,9 @@
+apiVersion: semantic.platform/v1
+kind: Project
+metadata:
+  id: fixture.teaching.expense
+  name: 教学项目·差旅报销
+  namespace: fixture.teaching.expense
+  description: 教学夹具公司下的差旅报销项目。与请假项目分开，不在这里上收共用口径。
+spec:
+  company: fixture.teaching

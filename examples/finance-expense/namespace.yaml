@@ -8,5 +8,6 @@ metadata:
 spec:
   domain: finance
   version: 0.1.0
+  project: fixture.teaching.expense
   owners:
     - finance-ops

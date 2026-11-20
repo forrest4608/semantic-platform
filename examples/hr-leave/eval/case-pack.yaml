@@ -24,7 +24,7 @@ spec:
       golden: true
     - id: EC-3
       question: 主管能否批准一条待审批的请假？
-      expectedAnswer: 可以发起动作 ApproveLeave。前置条件要求状态为 pending，且需要 hr_admin 确认后才写回 LeaveRequest。
+      expectedAnswer: 可以发起动作 ApproveLeave。写入须经直属主管确认。是否另须人事审批由 Policy 按工作日门槛判断，未超过门槛时不要求 hr_admin。
       expectedObjects:
         - hr.leave.ApproveLeave
         - hr.leave.LeaveRequest

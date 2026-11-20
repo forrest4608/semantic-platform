@@ -15,3 +15,6 @@ spec:
   operations:
     - invoke
   condition: 禁止采用废止版本；选版看业务发生时点
+  check:
+    kind: forbid_superseded
+    rule: finance.meal.2022

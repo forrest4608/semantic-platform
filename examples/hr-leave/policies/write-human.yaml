@@ -1,0 +1,22 @@
+apiVersion: semantic.platform/v1
+kind: Policy
+metadata:
+  id: hr.leave.policy.write_human
+  name: 请假写入须经直属主管确认
+  namespace: hr.leave
+  description: 写回请假单的人授权钩子。这和超过门槛后的人事审批不是同一道门。
+spec:
+  effect: deny
+  subjects:
+    - type: role
+      value: agent
+  resources:
+    - hr.leave.ApproveLeave
+  operations:
+    - invoke
+  condition: 写入请假结果须经直属主管确认，模型不能自行写回
+  check:
+    kind: human_authorization
+    action: hr.leave.ApproveLeave
+    approverRoles:
+      - manager
