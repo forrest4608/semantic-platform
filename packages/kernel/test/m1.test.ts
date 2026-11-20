@@ -1,5 +1,6 @@
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
+import { validateDocumentSchema } from "@semantic/contract";
 import { ModelError } from "../src/types.ts";
 import {
   countByBasis,
@@ -15,6 +16,7 @@ import {
   quoteLimit,
   retrieveEvidence,
   validateModel,
+  type SemanticModel,
 } from "../src/index.ts";
 
 const hrDir = fileURLToPath(new URL("../../../examples/hr-leave", import.meta.url));
@@ -215,7 +217,84 @@ describe("教学用例门禁", () => {
       versionCorrect: false,
     });
   });
+
+  it("schema 允许的完整正确轨迹会让已知失败检查失败", () => {
+    const hr = loadModel(hrDir);
+    const leaveTrace = {
+      basis: "working_day",
+      ruleId: "hr.leave.rule.approval",
+      citation: "《请假管理办法》第 5 条",
+      countedDays: 2,
+      requiresHrApproval: false,
+      remainingLeaveDays: 8,
+      thresholdValue: 3,
+      inForce: true,
+      receiptComplete: true,
+      inputSpan: "周五至下周一",
+      effectiveFrom: null,
+      supersededAt: null,
+      replaces: null,
+      replacedBy: null,
+    };
+    const leaveDoc = withKnownFailure(hr, "eval_hr_001", leaveTrace);
+    expect(validateDocumentSchema("EvalCase", leaveDoc).ok).toBe(true);
+    const leaveReport = evaluateModel(indexDocuments(hr.documents.map((document) => (
+      document.metadata.id === "eval_hr_001" ? leaveDoc : document
+    ))));
+    const leave = leaveReport.results.find((item) => item.caseId === "eval_hr_001");
+    expect(leave?.releaseGate?.knownFailures[0]?.passed).toBe(true);
+    expect(leave?.releaseGate?.knownFailures[0]?.receiptComplete).toBe(true);
+    expect(leave?.passed).toBe(false);
+    expect(leave?.notes.join("")).toContain("未被拦截");
+
+    const finance = loadModel(financeDir);
+    const expenseTrace = {
+      basis: "calendar_day",
+      ruleId: "finance.meal.2025",
+      citation: "《差旅报销管理办法》2025 版第 7 条",
+      countedDays: 3,
+      unitAmount: 100,
+      cap: 300,
+      invoiceAmount: 420,
+      reimbursable: 300,
+      selfPay: 120,
+      inForce: true,
+      receiptComplete: true,
+      inputSpan: "周三至周五",
+      effectiveFrom: "2025-01-01",
+      supersededAt: null,
+      replaces: "finance.meal.2022",
+      replacedBy: null,
+    };
+    const expenseDoc = withKnownFailure(finance, "eval_exp_001", expenseTrace);
+    expect(validateDocumentSchema("EvalCase", expenseDoc).ok).toBe(true);
+    const expenseReport = evaluateModel(indexDocuments(finance.documents.map((document) => (
+      document.metadata.id === "eval_exp_001" ? expenseDoc : document
+    ))));
+    const expense = expenseReport.results.find((item) => item.caseId === "eval_exp_001");
+    expect(expense?.releaseGate?.knownFailures[0]?.passed).toBe(true);
+    expect(expense?.passed).toBe(false);
+    expect(expense?.notes.join("")).toContain("未被拦截");
+  });
 });
+
+function withKnownFailure(model: SemanticModel, caseId: string, trace: Record<string, unknown>) {
+  const document = model.byId.get(caseId);
+  if (!document) throw new Error(caseId);
+  return {
+    ...document,
+    spec: {
+      ...document.spec,
+      knownFailures: [
+        {
+          id: "control_complete_receipt",
+          description: "完整且正确的回执不应被当成失败",
+          trace,
+        },
+      ],
+    },
+  };
+}
 
 describe("评测用例入库", () => {
   it("可以重新入库口径对照用例，重复 id 被拒绝", () => {

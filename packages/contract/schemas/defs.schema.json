@@ -71,6 +71,18 @@
         }
       }
     },
+    "nullableDate": {
+      "anyOf": [
+        { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+        { "type": "null" }
+      ]
+    },
+    "nullableId": {
+      "anyOf": [
+        { "$ref": "#/$defs/id" },
+        { "type": "null" }
+      ]
+    },
     "dayMark": {
       "type": "object",
       "additionalProperties": false,
@@ -138,7 +150,12 @@
             "selfPay": { "type": "number" },
             "inForce": { "type": "boolean" },
             "receiptComplete": { "type": "boolean" },
-            "inputSpan": { "type": "string" }
+            "inputSpan": { "type": "string" },
+            "thresholdValue": { "type": "number" },
+            "effectiveFrom": { "$ref": "#/$defs/nullableDate" },
+            "supersededAt": { "$ref": "#/$defs/nullableDate" },
+            "replaces": { "$ref": "#/$defs/nullableId" },
+            "replacedBy": { "$ref": "#/$defs/nullableId" }
           }
         }
       }
