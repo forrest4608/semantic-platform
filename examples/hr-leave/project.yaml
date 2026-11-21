@@ -1,0 +1,9 @@
+apiVersion: semantic.platform/v1
+kind: Project
+metadata:
+  id: fixture.teaching.leave
+  name: 教学项目·请假
+  namespace: fixture.teaching.leave
+  description: 教学夹具公司下的请假项目。只包含这个项目里的请假场景。
+spec:
+  company: fixture.teaching

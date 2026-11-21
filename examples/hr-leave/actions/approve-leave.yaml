@@ -15,8 +15,8 @@ spec:
   approval:
     required: true
     approverRoles:
-      - hr_admin
-    description: 需要人力资源管理员确认后才允许写回
+      - manager
+    description: 写入须经直属主管确认。是否另须人事审批由 Policy 按工作日门槛判断，未超过门槛时不要求 hr_admin。
   writeBack:
     target: hr.leave.LeaveRequest
     operation: update

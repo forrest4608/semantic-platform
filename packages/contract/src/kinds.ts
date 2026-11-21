@@ -3,6 +3,8 @@
 export const API_VERSION = "semantic.platform/v1" as const;
 
 export const OBJECT_KINDS = [
+  "Company",
+  "Project",
   "Namespace",
   "Entity",
   "Relation",
@@ -24,6 +26,8 @@ export function isObjectKind(value: string): value is ObjectKind {
 }
 
 const SCHEMA_IDS: Record<ObjectKind, string> = {
+  Company: "https://semantic.platform/schema/company.json",
+  Project: "https://semantic.platform/schema/project.json",
   Namespace: "https://semantic.platform/schema/namespace.json",
   Entity: "https://semantic.platform/schema/entity.json",
   Relation: "https://semantic.platform/schema/relation.json",

@@ -1,0 +1,22 @@
+apiVersion: semantic.platform/v1
+kind: Policy
+metadata:
+  id: finance.policy.write_human
+  name: 报销写入须经财务确认
+  namespace: finance
+  description: 财务闸门。可报金额仍由现行 Rule 计算，本策略只规定谁可以授权写入。
+spec:
+  effect: deny
+  subjects:
+    - type: role
+      value: agent
+  resources:
+    - finance.SubmitExpense
+  operations:
+    - invoke
+  condition: 提交报销单须经财务确认，模型不能自行写入
+  check:
+    kind: human_authorization
+    action: finance.SubmitExpense
+    approverRoles:
+      - finance

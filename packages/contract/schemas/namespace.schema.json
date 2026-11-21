@@ -13,7 +13,7 @@
     "spec": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["domain", "version"],
+      "required": ["domain", "version", "project"],
       "properties": {
         "domain": {
           "type": "string",
@@ -24,6 +24,10 @@
           "type": "string",
           "minLength": 1,
           "description": "该 Namespace 内容的作者版本，不是平台协议版本。"
+        },
+        "project": {
+          "$ref": "https://semantic.platform/schema/defs.json#/$defs/id",
+          "description": "本域切片所属的项目。Namespace 不能脱离公司与项目单独存在。"
         },
         "owners": {
           "type": "array",

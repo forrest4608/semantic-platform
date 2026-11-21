@@ -1,0 +1,8 @@
+apiVersion: semantic.platform/v1
+kind: Company
+metadata:
+  id: fixture.teaching
+  name: 教学夹具公司
+  namespace: fixture.teaching
+  description: 不是真实客户。两个示例目录单独加载，所以同一家教学公司会各放一份。跨项目上收口径不在本次范围。
+spec: {}

@@ -6,6 +6,7 @@ metadata:
   namespace: finance
   description: 李四周三赴北京、周五返回。只构建支撑这三个需求目标的对象。
 spec:
+  project: fixture.teaching.expense
   goals:
     - id: G1
       statement: 判断能否报销

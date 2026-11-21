@@ -12,6 +12,7 @@ import {
   ingestEvalCase,
   judgeKnownFailure,
   loadModel,
+  policyViolations,
   queryRuleVersion,
   quoteLimit,
   retrieveEvidence,
@@ -295,6 +296,132 @@ function withKnownFailure(model: SemanticModel, caseId: string, trace: Record<st
     },
   };
 }
+
+describe("公司、项目、场景", () => {
+  it("教学用例挂在教学夹具公司下的各自项目，而不是悬空的域", () => {
+    const leave = loadModel(hrDir);
+    const expense = loadModel(financeDir);
+    expect(leave.byId.get("fixture.teaching")?.kind).toBe("Company");
+    expect(leave.byId.get("fixture.teaching")?.metadata.name).toBe("教学夹具公司");
+    expect(expense.byId.get("fixture.teaching")?.metadata.name).toBe("教学夹具公司");
+    expect(leave.byId.get("fixture.teaching.leave")).toMatchObject({
+      kind: "Project",
+      spec: { company: "fixture.teaching" },
+    });
+    expect(expense.byId.get("fixture.teaching.expense")).toMatchObject({
+      kind: "Project",
+      spec: { company: "fixture.teaching" },
+    });
+    expect(leave.byId.get("hr.leave")?.spec.project).toBe("fixture.teaching.leave");
+    expect(expense.byId.get("finance")?.spec.project).toBe("fixture.teaching.expense");
+    expect(leave.byId.get("hr.leave.brief.approval")?.spec.project).toBe("fixture.teaching.leave");
+    expect(expense.byId.get("finance.brief.meal")?.spec.project).toBe("fixture.teaching.expense");
+    expect(validateModel(leave).ok).toBe(true);
+    expect(validateModel(expense).ok).toBe(true);
+  });
+
+  it("场景不能挂到另一个项目", () => {
+    const model = loadModel(hrDir);
+    const next = indexDocuments(
+      model.documents.map((document) =>
+        document.metadata.id === "hr.leave.brief.approval"
+          ? { ...document, spec: { ...document.spec, project: "fixture.teaching" } }
+          : document,
+      ),
+    );
+    const report = validateModel(next);
+    expect(report.ok).toBe(false);
+    expect(report.issues.some((item) => item.code === "missing_project" || item.code === "project_mismatch")).toBe(
+      true,
+    );
+  });
+});
+
+describe("策略与人授权分开", () => {
+  it("请假规则只保留门槛，人事审批由 Policy 决定", () => {
+    const model = loadModel(hrDir);
+    const rule = model.byId.get("hr.leave.rule.approval");
+    expect(rule?.metadata.name).toBe("请假时长按工作日计，门槛 3 个工作日");
+    expect(rule?.metadata.name).not.toContain("须人事审批");
+    expect(getLeaveDays(model, "eval_hr_001")).toMatchObject({
+      thresholdValue: 3,
+      thresholdExceeded: false,
+      requiresHrApproval: false,
+    });
+    const stripped = indexDocuments(
+      model.documents.filter((document) => document.metadata.id !== "hr.leave.policy.hr_approval"),
+    );
+    expect(() => getLeaveDays(stripped, "eval_hr_001")).toThrow(/Policy/);
+
+    expect(policyViolations(model, "hr.leave.rule.approval", {
+      basis: "calendar_day",
+      countedDays: 4,
+      requiresHrApproval: true,
+    })).toContain("forbid_basis");
+    expect(policyViolations(model, "hr.leave.rule.approval", {
+      basis: "working_day",
+      countedDays: 2,
+      requiresHrApproval: true,
+    })).toContain("approval");
+    expect(policyViolations(model, "hr.leave.rule.approval", {
+      basis: "working_day",
+      countedDays: 4,
+      requiresHrApproval: false,
+    })).toContain("approval");
+    expect(policyViolations(model, "hr.leave.rule.approval", {
+      basis: "working_day",
+      countedDays: 2,
+      requiresHrApproval: false,
+    })).toEqual([]);
+  });
+
+  it("写回钩子仍要人确认，但未超门槛时不把 hr_admin 当成必经角色", () => {
+    const model = loadModel(hrDir);
+    const action = model.byId.get("hr.leave.ApproveLeave");
+    expect(action?.spec.approval).toMatchObject({ required: true, approverRoles: ["manager"] });
+    const finance = loadModel(financeDir);
+    expect(finance.byId.get("finance.SubmitExpense")?.spec.approval).toMatchObject({
+      required: true,
+      approverRoles: ["finance"],
+    });
+    expect(
+      policyViolations(
+        finance,
+        "finance.meal.2025",
+        { ruleId: "finance.meal.2022" },
+        { asOf: "2025-01-01", subjectType: "员工" },
+      ),
+    ).toContain("forbid_superseded");
+    expect(
+      policyViolations(
+        finance,
+        "finance.meal.2025",
+        { ruleId: "finance.meal.2022" },
+        { asOf: "2024-12-31", subjectType: "员工" },
+      ),
+    ).not.toContain("forbid_superseded");
+    expect(
+      quoteLimit(finance, {
+        ruleId: "finance.meal.2022",
+        asOf: "2024-12-31",
+        subjectType: "员工",
+        spanLabel: "周三至周五",
+        days: [
+          { label: "周三", kind: "working_day" },
+          { label: "周四", kind: "working_day" },
+          { label: "周五", kind: "working_day" },
+        ],
+        personCount: 1,
+        invoiceAmount: 420,
+        departureIncluded: true,
+        returnIncluded: true,
+      }).unitAmount,
+    ).toBe(150);
+    expect(policyViolations(finance, "finance.meal.2025", { ruleId: "finance.meal.2025" })).toEqual([]);
+    expect(validateModel(model).ok).toBe(true);
+    expect(validateModel(finance).ok).toBe(true);
+  });
+});
 
 describe("评测用例入库", () => {
   it("可以重新入库口径对照用例，重复 id 被拒绝", () => {
