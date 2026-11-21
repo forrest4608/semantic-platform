@@ -177,6 +177,19 @@ describe("diff 与 patch", () => {
       }),
     ).toThrow(/不存在/);
   });
+
+  it("同一 id 从 Metric 换成 Entity 时先删除再新增", () => {
+    const base = indexDocuments([sameIdMetric()]);
+    const head = indexDocuments([sameIdEntity()]);
+    const patch = diffModels(base, head);
+    expect(patch.operations.map((operation) => `${operation.op}:${operation.targetKind}`)).toEqual([
+      "remove:Metric",
+      "add:Entity",
+    ]);
+    const applied = applyPatch(base, patch);
+    expect(applied.byId.get("hr.leave.same")?.kind).toBe("Entity");
+    expect(canonical(applied.documents)).toBe(canonical(head.documents));
+  });
 });
 
 describe("评测占位打分", () => {
@@ -240,6 +253,27 @@ describe("导出与编译占位", () => {
     }
   });
 });
+
+function sameIdMetric(): SemanticDocument {
+  return {
+    apiVersion: "semantic.platform/v1",
+    kind: "Metric",
+    metadata: { id: "hr.leave.same", name: "same", namespace: "hr.leave" },
+    spec: { entity: "hr.leave.Employee", expression: "1", aggregation: "none" },
+  };
+}
+
+function sameIdEntity(): SemanticDocument {
+  return {
+    apiVersion: "semantic.platform/v1",
+    kind: "Entity",
+    metadata: { id: "hr.leave.same", name: "same", namespace: "hr.leave" },
+    spec: {
+      primaryKey: ["employee_id"],
+      attributes: [{ name: "employee_id", type: "string" }],
+    },
+  };
+}
 
 function extraMetric(): SemanticDocument {
   return {
