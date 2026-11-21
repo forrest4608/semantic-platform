@@ -6,6 +6,7 @@ metadata:
   namespace: hr.leave
   description: 张三周五至下周一请假。只构建支撑这三个需求目标的对象。
 spec:
+  project: fixture.teaching.leave
   goals:
     - id: G1
       statement: 查剩余年假

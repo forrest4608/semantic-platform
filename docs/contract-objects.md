@@ -4,16 +4,35 @@
 
 `metadata` 含 `id`、`name`、`namespace`，以及可选的 `description`。`id` 在整个模型里唯一，建议以 Namespace 为前缀，例如 `hr.leave.Employee`。Namespace 自己的 `metadata.namespace` 必须等于 `metadata.id`。
 
-JSON Schema 在 `packages/contract/schemas`。下面只说明作者需要填写的内容。表达式、条件和过滤都是作者文本，M0 不解析、不执行。
+JSON Schema 在 `packages/contract/schemas`。下面只说明作者需要填写的内容。表达式、条件和过滤都是作者文本，不解析、不执行。`Policy.spec.condition` 也一样。`Policy.spec.check` 只核对两个教学用例需要的几种判断，不是通用策略引擎。
+
+Ontology 是概念分组，不是单独的 kind。它包括 Entity、Relation、Metric、Rule、SourceMapping，用来描述业务世界里的对象、关系和计算事实。Policy 与 Action 不放进这组：Policy 守边界，Action 是可执行动作，写回还要人授权。模型只提议。检索到的制度原文不能改写 Rule 上的事实，也不能把已废止规则拿来计算。
+
+建造顺序是公司、项目、场景，不是先画一张全公司地图。Company 是一家具体公司，Project 属于这家公司，ScenarioBrief 是该项目里的一个场景，Namespace 是这个场景沉淀下来的域切片。教学用例使用「教学夹具公司」，不是真实客户。两个示例目录仍然分开加载，所以同一份公司对象会各放一份。跨项目复用口径、把共用计算基准向上收，都留到以后，不在这次做。
+
+## Company
+
+一家具体的公司。`metadata.id` 与 `metadata.name` 就是标识和名称。`metadata.namespace` 等于自己的 id。`spec` 为空对象。
+
+## Project
+
+项目，必须属于一家公司。
+
+| 字段 | 说明 |
+| --- | --- |
+| spec.company | Company 的 id |
+
+`metadata.namespace` 等于自己的 id。项目不是业务域 Namespace。
 
 ## Namespace
 
-业务域。场景驱动语义构建的结果放在这里。
+业务域切片。场景驱动语义构建的结果放在这里，但不能脱离项目。
 
 | 字段 | 说明 |
 | --- | --- |
 | spec.domain | 更粗的域标签，如 `hr` |
 | spec.version | 该域内容的作者版本 |
+| spec.project | 所属 Project。由此也能找到公司 |
 | spec.owners | 可选，负责人列表 |
 
 ## Entity
@@ -57,7 +76,8 @@ JSON Schema 在 `packages/contract/schemas`。下面只说明作者需要填写�
 | spec.subjects | `type` 为 `role`、`user` 或 `group` |
 | spec.resources | 契约对象 id |
 | spec.operations | `read`、`write`、`invoke` |
-| spec.condition | 可选文本 |
+| spec.condition | 可选文本，不执行 |
+| spec.check | 可选。教学用例用的结构化判断：`forbid_basis`、`require_approval_when_exceeded`、`forbid_superseded`、`human_authorization` |
 
 ## Action
 
@@ -79,6 +99,7 @@ JSON Schema 在 `packages/contract/schemas`。下面只说明作者需要填写�
 
 | 字段 | 说明 |
 | --- | --- |
+| spec.project | 所属 Project，必须与所在 Namespace 的项目相同 |
 | spec.goals[].id | `G1`、`G2` 这种编号，同一简报内不可重复 |
 | spec.goals[].statement | 目标陈述 |
 | spec.goals[].priority | 可选：`must`、`should`、`could` |
@@ -115,7 +136,7 @@ CasePack 还要指向一份 ScenarioBrief（`spec.scenarioBrief`）。
 
 ## Rule
 
-可按业务发生时点查询的规则。同一 `topic` 下，现行版和已废止版可以同时被检索到，但只有现行版能进入计算。
+可按业务发生时点查询的规则，属于 Ontology 里的计算事实。同一 `topic` 下，现行版和已废止版可以同时被检索到，但只有现行版能进入计算。门槛、单价、计算基准和版本写在这里。要不要人事审批、能不能采用已废止版本，由 Policy 决定。
 
 | 字段 | 说明 |
 | --- | --- |

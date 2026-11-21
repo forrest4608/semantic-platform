@@ -2,9 +2,9 @@ apiVersion: semantic.platform/v1
 kind: Rule
 metadata:
   id: hr.leave.rule.approval
-  name: 超过 3 个工作日须人事审批
+  name: 请假时长按工作日计，门槛 3 个工作日
   namespace: hr.leave
-  description: 按工作日计时长，周末不计入。制度文本没有写生效日和废止日，主体匹配时即视为现行。
+  description: 只记录计算基准和门槛。超过门槛后是否须人事审批由 Policy 决定。证据摘录保留制度原文。制度文本没有写生效日和废止日，主体匹配时即视为现行。
 spec:
   topic: leave_duration
   citation: 《请假管理办法》第 5 条

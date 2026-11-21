@@ -19,6 +19,8 @@
           "op": { "enum": ["add", "remove", "replace"] },
           "targetKind": {
             "enum": [
+              "Company",
+              "Project",
               "Namespace",
               "Entity",
               "Relation",

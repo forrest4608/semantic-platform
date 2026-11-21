@@ -15,3 +15,7 @@ spec:
   operations:
     - invoke
   condition: 禁止用自然日时长作为审批依据
+  check:
+    kind: forbid_basis
+    rule: hr.leave.rule.approval
+    basis: calendar_day
