@@ -1,0 +1,24 @@
+apiVersion: semantic.platform/v1
+kind: Rule
+metadata:
+  id: finance.meal.2022
+  name: 短期出差包干 150 元每天
+  namespace: finance
+  description: 2022 旧规，已废止。废止日与 2025 版生效日对齐，只编码版本年，不是客户制度的承诺日。
+spec:
+  topic: meal_allowance
+  citation: 2022 旧规「短期出差包干 150 元/天」
+  basis: calendar_day
+  subjectTypes:
+    - 员工
+  effectiveFrom: "2022-01-01"
+  supersededAt: "2025-01-01"
+  replacedBy: finance.meal.2025
+  limit:
+    amount: 150
+    per: person
+    unit: calendar_day
+    currency: CNY
+  evidence:
+    title: 2022 旧规「短期出差包干 150 元/天」
+    excerpt: 短期出差包干 150 元/天

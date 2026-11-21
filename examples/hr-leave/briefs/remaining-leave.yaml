@@ -1,0 +1,20 @@
+apiVersion: semantic.platform/v1
+kind: ScenarioBrief
+metadata:
+  id: hr.leave.brief.remaining
+  name: 查询并审批假期
+  namespace: hr.leave
+  description: 由业务场景描述整理出的需求目标，用来决定本域要构建哪些语义对象。
+spec:
+  goals:
+    - id: G1
+      statement: 员工可以查询本人剩余年假天数
+      priority: must
+    - id: G2
+      statement: 员工可以查看本人请假申请及其状态
+      priority: must
+    - id: G3
+      statement: 主管可以批准待审批的请假申请，并留下确认痕迹
+      priority: must
+  sources:
+    - 员工手册·假期章节（示例材料，不是真实制度）

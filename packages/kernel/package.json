@@ -1,0 +1,16 @@
+{
+  "name": "@semantic/kernel",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@semantic/contract": "workspace:*",
+    "js-yaml": "4.3.2"
+  },
+  "devDependencies": {
+    "@types/js-yaml": "4.0.9"
+  }
+}

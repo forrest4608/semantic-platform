@@ -1,0 +1,21 @@
+apiVersion: semantic.platform/v1
+kind: SourceMapping
+metadata:
+  id: hr.leave.map.Employee
+  name: 员工主数据映射
+  namespace: hr.leave
+  description: Employee 到来源系统的字段对应关系。M0 不读取该系统。
+spec:
+  objectRef: hr.leave.Employee
+  source:
+    system: hris
+    locator: hr.employees
+  fieldMappings:
+    - semantic: employee_id
+      physical: emp_id
+    - semantic: name
+      physical: emp_name
+    - semantic: annual_leave_quota
+      physical: annual_quota
+    - semantic: used_leave_days
+      physical: used_annual_days

@@ -1,0 +1,12 @@
+apiVersion: semantic.platform/v1
+kind: Namespace
+metadata:
+  id: finance
+  name: 差旅费用报销
+  namespace: finance
+  description: 餐费报销教学用例。限额以契约里的现行版本为准。
+spec:
+  domain: finance
+  version: 0.1.0
+  owners:
+    - finance-ops

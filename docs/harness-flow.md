@@ -1,0 +1,23 @@
+# Harness 流程
+
+模型由对话驱动的 agent harness 协助构建。harness 可以提议，不能自行发布。每一次提议都是一份 ModelPatch，人确认之后才进入已发布模型。
+
+流程如下。
+
+1. **阅读材料。** 读业务场景描述、制度、表结构说明等来源。材料名称可以记在 ScenarioBrief 的 `sources` 里。来源系统与字段对应关系另写 SourceMapping。
+2. **澄清问题。** 把材料整理成可讨论的问题，确认参与者、对象和希望得到的结果。
+3. **推导对象。** 从已经澄清的内容推出实体、关系、规则（Policy）和动作（Action），并写成需求目标 G[]，放进 ScenarioBrief。只添加支撑这些目标的对象。
+4. **证据不足或冲突时停下来。** 如果材料没写清，记一条 `kind: unknown` 的 GapLog；如果材料互相矛盾，记 `kind: conflict`。然后向业务提问，回到第 2 步。不要用猜测填上口径。
+5. **保存定义、来源和映射。** 对象定义、材料来源、SourceMapping 一起落入对应 Namespace。
+6. **案例校验。** 用业务问句检查这些对象是否够用，生成 EvalCase，收进 CasePack，并挂到对应的 ScenarioBrief。问句要通过 `expectedObjects` 指到具体对象。
+7. **人工确认发布。** 审阅 diff 出来的补丁。确认后才发布。未关闭的 GapLog 会留在模型里，提醒还有待澄清的问题；M0 不因此自动阻断发布，这条规则以后再定。
+
+M0 没有实现这个循环本身，只有它要读写的对象、补丁和评测命令。
+
+## M1 对话内核
+
+`packages/harness` 是我们自己的接口。它固定包装 DeepSeek Harness `@deepseek-ai/dsh@0.2.2-rc.5`（标签 `dsh-v0.2.2-rc.5`，Cordis 插件架构）。这个包要求 Node 24，本仓库的测试和默认运行都不加载它，也不调用火山方舟。
+
+模型地址和模型名写在 `config/llm.example.yaml`，可以用 `LLM_BASE_URL`、`LLM_MODEL` 覆盖。密钥只读 `ARK_API_KEY`，不进配置对象，也不进日志。
+
+harness 只能提议。补丁先过内核的 schema。`confirmRelease` 单独接受人的确认，然后才把补丁应用到内存模型。默认插件清单里的工具全是读工具。写工具和业务系统写入不能从提议接口里发生。

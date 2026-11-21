@@ -1,0 +1,13 @@
+apiVersion: semantic.platform/v1
+kind: Relation
+metadata:
+  id: finance.Invoice.claim
+  name: claim
+  namespace: finance
+  description: 报销单包含发票
+spec:
+  from: finance.Invoice
+  to: finance.ExpenseClaim
+  cardinality: many_to_one
+  fromAttribute: claim_id
+  toAttribute: claim_id

@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semantic.platform/schema/namespace.json",
+  "title": "Namespace",
+  "description": "业务域命名空间。场景驱动语义构建的结果沉淀在这里。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["apiVersion", "kind", "metadata", "spec"],
+  "properties": {
+    "apiVersion": { "const": "semantic.platform/v1" },
+    "kind": { "const": "Namespace" },
+    "metadata": { "$ref": "https://semantic.platform/schema/defs.json#/$defs/metadata" },
+    "spec": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["domain", "version"],
+      "properties": {
+        "domain": {
+          "type": "string",
+          "minLength": 1,
+          "description": "更粗的业务域标签，例如 hr、finance。"
+        },
+        "version": {
+          "type": "string",
+          "minLength": 1,
+          "description": "该 Namespace 内容的作者版本，不是平台协议版本。"
+        },
+        "owners": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        }
+      }
+    }
+  }
+}

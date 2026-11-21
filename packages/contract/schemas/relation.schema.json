@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semantic.platform/schema/relation.json",
+  "title": "Relation",
+  "description": "实体之间的关系。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["apiVersion", "kind", "metadata", "spec"],
+  "properties": {
+    "apiVersion": { "const": "semantic.platform/v1" },
+    "kind": { "const": "Relation" },
+    "metadata": { "$ref": "https://semantic.platform/schema/defs.json#/$defs/metadata" },
+    "spec": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["from", "to", "cardinality", "fromAttribute", "toAttribute"],
+      "properties": {
+        "from": { "$ref": "https://semantic.platform/schema/defs.json#/$defs/id" },
+        "to": { "$ref": "https://semantic.platform/schema/defs.json#/$defs/id" },
+        "cardinality": {
+          "enum": ["one_to_one", "one_to_many", "many_to_one", "many_to_many"]
+        },
+        "fromAttribute": { "type": "string", "minLength": 1 },
+        "toAttribute": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}

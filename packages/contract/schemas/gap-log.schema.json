@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semantic.platform/schema/gap-log.json",
+  "title": "GapLog",
+  "description": "证据不足或互相冲突时的记录。构建循环应据此回到业务侧澄清。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["apiVersion", "kind", "metadata", "spec"],
+  "properties": {
+    "apiVersion": { "const": "semantic.platform/v1" },
+    "kind": { "const": "GapLog" },
+    "metadata": { "$ref": "https://semantic.platform/schema/defs.json#/$defs/metadata" },
+    "spec": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["items"],
+      "properties": {
+        "items": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "kind", "description", "status"],
+            "properties": {
+              "id": { "$ref": "https://semantic.platform/schema/defs.json#/$defs/id" },
+              "kind": {
+                "enum": ["unknown", "conflict"],
+                "description": "unknown 表示材料没写清；conflict 表示材料互相矛盾。"
+              },
+              "description": { "type": "string", "minLength": 1 },
+              "status": { "enum": ["open", "resolved", "waived"] },
+              "relatedGoals": {
+                "type": "array",
+                "items": { "type": "string", "pattern": "^G[1-9][0-9]*$" }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

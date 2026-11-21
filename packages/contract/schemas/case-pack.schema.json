@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semantic.platform/schema/case-pack.json",
+  "title": "CasePack",
+  "description": "一组 EvalCase，挂在某份 ScenarioBrief 上。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["apiVersion", "kind", "metadata", "spec"],
+  "properties": {
+    "apiVersion": { "const": "semantic.platform/v1" },
+    "kind": { "const": "CasePack" },
+    "metadata": { "$ref": "https://semantic.platform/schema/defs.json#/$defs/metadata" },
+    "spec": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["scenarioBrief", "cases"],
+      "properties": {
+        "scenarioBrief": { "$ref": "https://semantic.platform/schema/defs.json#/$defs/id" },
+        "cases": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "https://semantic.platform/schema/defs.json#/$defs/evalCase" }
+        }
+      }
+    }
+  }
+}

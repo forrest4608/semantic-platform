@@ -1,0 +1,13 @@
+apiVersion: semantic.platform/v1
+kind: Relation
+metadata:
+  id: hr.leave.LeaveRequest.employee
+  name: employee
+  namespace: hr.leave
+  description: 请假申请所属的员工
+spec:
+  from: hr.leave.LeaveRequest
+  to: hr.leave.Employee
+  cardinality: many_to_one
+  fromAttribute: employee_id
+  toAttribute: employee_id

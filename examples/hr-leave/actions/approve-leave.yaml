@@ -1,0 +1,26 @@
+apiVersion: semantic.platform/v1
+kind: Action
+metadata:
+  id: hr.leave.ApproveLeave
+  name: ApproveLeave
+  namespace: hr.leave
+  description: 批准请假申请，并在审批通过后写回状态
+spec:
+  preconditions:
+    - expression: LeaveRequest.status == 'pending'
+      description: 只有待审批的申请可以批准
+  permissions:
+    - role: manager
+      description: 直属主管可以发起批准
+  approval:
+    required: true
+    approverRoles:
+      - hr_admin
+    description: 需要人力资源管理员确认后才允许写回
+  writeBack:
+    target: hr.leave.LeaveRequest
+    operation: update
+    fields:
+      - status
+      - approved_by
+      - approved_at

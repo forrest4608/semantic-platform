@@ -1,0 +1,15 @@
+# 认证占位。仓库不保存口令或 client secret。
+oidc:
+  enabled: true
+  issuer: https://idp.example.com
+  clientId: semantic-platform
+  clientSecretEnv: OIDC_CLIENT_SECRET
+  redirectUri: http://localhost:5173/auth/callback
+  scopes:
+    - openid
+    - profile
+    - email
+localAdmin:
+  enabled: true
+  username: admin
+  passwordEnv: LOCAL_ADMIN_PASSWORD

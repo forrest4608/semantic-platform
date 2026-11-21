@@ -1,0 +1,26 @@
+apiVersion: semantic.platform/v1
+kind: Entity
+metadata:
+  id: finance.ExpenseClaim
+  name: ExpenseClaim
+  namespace: finance
+  description: 报销单
+spec:
+  primaryKey:
+    - claim_id
+  attributes:
+    - name: claim_id
+      type: string
+      required: true
+    - name: trip_id
+      type: string
+      required: true
+    - name: status
+      type: string
+      required: true
+    - name: reimbursable_amount
+      type: number
+      required: false
+    - name: invoice_amount
+      type: number
+      required: false

@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semantic.platform/schema/action.json",
+  "title": "Action",
+  "description": "可执行动作。包含前置条件、权限、审批要求与写回目标。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["apiVersion", "kind", "metadata", "spec"],
+  "properties": {
+    "apiVersion": { "const": "semantic.platform/v1" },
+    "kind": { "const": "Action" },
+    "metadata": { "$ref": "https://semantic.platform/schema/defs.json#/$defs/metadata" },
+    "spec": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["preconditions", "permissions", "approval", "writeBack"],
+      "properties": {
+        "preconditions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["expression"],
+            "properties": {
+              "expression": { "type": "string", "minLength": 1 },
+              "description": { "type": "string" }
+            }
+          }
+        },
+        "permissions": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["role"],
+            "properties": {
+              "role": { "type": "string", "minLength": 1 },
+              "description": { "type": "string" }
+            }
+          }
+        },
+        "approval": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["required"],
+          "properties": {
+            "required": { "type": "boolean" },
+            "approverRoles": {
+              "type": "array",
+              "items": { "type": "string", "minLength": 1 }
+            },
+            "description": { "type": "string" }
+          }
+        },
+        "writeBack": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["target", "operation", "fields"],
+          "properties": {
+            "target": { "$ref": "https://semantic.platform/schema/defs.json#/$defs/id" },
+            "operation": { "enum": ["insert", "update", "upsert", "delete"] },
+            "fields": {
+              "type": "array",
+              "minItems": 1,
+              "items": { "type": "string", "minLength": 1 }
+            }
+          }
+        }
+      }
+    }
+  }
+}

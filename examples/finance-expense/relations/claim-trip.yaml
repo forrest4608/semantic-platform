@@ -1,0 +1,13 @@
+apiVersion: semantic.platform/v1
+kind: Relation
+metadata:
+  id: finance.ExpenseClaim.trip
+  name: trip
+  namespace: finance
+  description: 出差产生报销单
+spec:
+  from: finance.ExpenseClaim
+  to: finance.Trip
+  cardinality: many_to_one
+  fromAttribute: trip_id
+  toAttribute: trip_id

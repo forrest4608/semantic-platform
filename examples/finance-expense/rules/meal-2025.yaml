@@ -1,0 +1,24 @@
+apiVersion: semantic.platform/v1
+kind: Rule
+metadata:
+  id: finance.meal.2025
+  name: 餐费 100 元每人每自然日
+  namespace: finance
+  description: 2025 版现行规则。生效日取版本年的 1 月 1 日，只为把「2025 版」落到可查询的日期，不是客户制度的承诺日。
+spec:
+  topic: meal_allowance
+  citation: 《差旅报销管理办法》2025 版第 7 条
+  basis: calendar_day
+  subjectTypes:
+    - 员工
+  effectiveFrom: "2025-01-01"
+  replaces: finance.meal.2022
+  includeEndpoints: true
+  limit:
+    amount: 100
+    per: person
+    unit: calendar_day
+    currency: CNY
+  evidence:
+    title: 《差旅报销管理办法》2025 版第 7 条
+    excerpt: 餐费 100 元/人/自然日，出发日和返回日都计入

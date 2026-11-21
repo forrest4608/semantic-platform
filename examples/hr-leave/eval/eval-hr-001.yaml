@@ -1,0 +1,55 @@
+apiVersion: semantic.platform/v1
+kind: EvalCase
+metadata:
+  id: eval_hr_001
+  name: 周五至下周一是否需人事审批
+  namespace: hr.leave
+  description: 口径对照。查询时点用方案成文日，只表示这条没有废止日的规则仍然现行，不参与天数计算。
+spec:
+  question: 张三申请周五至下周一请假，要不要人事审批？
+  expectedAnswer: 2 个工作日未超过 3 个工作日门槛，不需人事审批；剩余年假 8 天，引用《请假管理办法》第 5 条。
+  expectedObjects:
+    - hr.leave.Employee
+    - hr.leave.LeaveRequest
+    - hr.leave.remaining_leave_days
+    - hr.leave.rule.approval
+    - hr.leave.ApproveLeave
+  golden: true
+  caseClass: calculation_basis
+  asOf: "2026-11-18"
+  subjectType: 全职员工
+  rule: hr.leave.rule.approval
+  scenarioBrief: hr.leave.brief.approval
+  evidenceQuery: 请假管理办法
+  interferenceRules: []
+  failureConditions:
+    - 按自然日算成 4 天并误触发人事审批
+  facts:
+    employeeName: 张三
+    spanLabel: 周五至下周一
+    remainingLeaveDays: 8
+    days:
+      - label: 周五
+        kind: working_day
+      - label: 周六
+        kind: weekend
+      - label: 周日
+        kind: weekend
+      - label: 下周一
+        kind: working_day
+  expected:
+    basis: working_day
+    citation: 《请假管理办法》第 5 条
+    inForce: true
+    countedDays: 2
+    requiresHrApproval: false
+    remainingLeaveDays: 8
+  knownFailures:
+    - id: rag_calendar_days
+      description: 按自然日算成 4 天并误触发人事审批
+      trace:
+        basis: calendar_day
+        countedDays: 4
+        requiresHrApproval: true
+        citation: 《请假管理办法》第 5 条
+        receiptComplete: false

@@ -1,0 +1,17 @@
+apiVersion: semantic.platform/v1
+kind: Policy
+metadata:
+  id: hr.leave.policy.self_read
+  name: 本人请假可读
+  namespace: hr.leave
+  description: 员工只能读取自己的请假申请
+spec:
+  effect: allow
+  subjects:
+    - type: role
+      value: employee
+  resources:
+    - hr.leave.LeaveRequest
+  operations:
+    - read
+  condition: subject.employee_id == resource.employee_id
