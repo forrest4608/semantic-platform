@@ -15,6 +15,7 @@ spec:
     - finance.Invoice
     - finance.meal.2025
     - finance.policy.no_superseded
+    - finance.policy.within_limit
     - finance.policy.write_human
     - finance.SubmitExpense
   golden: true

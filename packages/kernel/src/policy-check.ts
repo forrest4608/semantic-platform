@@ -4,7 +4,7 @@
  */
 import { documentsOf, isRecord, stringField } from "./model.ts";
 import { ModelError, type SemanticModel } from "./types.ts";
-import { queryRuleVersion } from "./version.ts";
+import { findInForceRule, queryRuleVersion } from "./version.ts";
 
 export interface PolicyTrace {
   basis?: string;
@@ -12,6 +12,9 @@ export interface PolicyTrace {
   countedDays?: number;
   requiresHrApproval?: boolean;
   inForce?: boolean;
+  unitAmount?: number;
+  reimbursable?: number;
+  personCount?: number;
 }
 
 /** 超过门槛是否须人事审批，只在存在对应 Policy 时才有结论。 */
@@ -53,6 +56,9 @@ export function policyViolations(
     if (check.kind === "require_approval_when_exceeded" && check.rule === subjectRuleId) {
       if (approvalDecisionMismatches(model, check, trace)) violations.push("approval");
     }
+    if (check.kind === "within_in_force_limit" && exceedsInForceLimit(model, check, trace, at)) {
+      violations.push("above_cap");
+    }
   }
   return violations;
 }
@@ -71,6 +77,32 @@ function approvalDecisionMismatches(
   if (trace.basis !== ruleBasis) return false;
   if (typeof trace.countedDays !== "number" || typeof trace.requiresHrApproval !== "boolean") return false;
   return trace.requiresHrApproval !== trace.countedDays > threshold;
+}
+
+function exceedsInForceLimit(
+  model: SemanticModel,
+  check: Record<string, unknown>,
+  trace: PolicyTrace,
+  at: { asOf: string; subjectType: string } | undefined,
+): boolean {
+  if (!at) return false;
+  const anchorId = stringField(check, "rule");
+  const anchor = anchorId ? model.byId.get(anchorId) : undefined;
+  const topic = anchor ? stringField(anchor.spec, "topic") : undefined;
+  if (!topic) return false;
+  let version;
+  try {
+    version = findInForceRule(model, { topic, subjectType: at.subjectType, asOf: at.asOf });
+  } catch {
+    return true;
+  }
+  const rule = model.byId.get(version.ruleId);
+  const limit = rule && isRecord(rule.spec.limit) ? rule.spec.limit.amount : undefined;
+  if (typeof limit !== "number") return false;
+  if (typeof trace.unitAmount === "number" && trace.unitAmount > limit) return true;
+  if (typeof trace.reimbursable !== "number" || typeof trace.countedDays !== "number") return false;
+  const people = typeof trace.personCount === "number" ? trace.personCount : 1;
+  return trace.reimbursable > limit * trace.countedDays * people;
 }
 
 function supersededAt(

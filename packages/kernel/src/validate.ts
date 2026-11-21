@@ -46,6 +46,8 @@ export function validateModel(model: SemanticModel): ValidationReport {
     for (const resource of stringList(policy.spec.resources)) {
       if (!model.byId.has(resource)) {
         issues.push(issue("missing_resource", policy.metadata.id, `策略资源不存在：${resource}`));
+      } else {
+        assertSameDomainNamespace(policy, resource, model, issues);
       }
     }
     checkStructuredPolicy(policy, model, issues, approvalRuleOwners);
@@ -147,6 +149,9 @@ function checkMapping(
   issues: ValidationIssue[],
 ): void {
   const objectRef = stringField(mapping.spec, "objectRef");
+  if (objectRef && model.byId.has(objectRef)) {
+    assertSameDomainNamespace(mapping, objectRef, model, issues);
+  }
   if (!objectRef || !model.byId.has(objectRef)) {
     issues.push(issue("missing_object", mapping.metadata.id, `映射目标不存在：${objectRef ?? ""}`));
     return;
@@ -224,6 +229,8 @@ function checkCasePack(
   const brief = briefId ? model.byId.get(briefId) : undefined;
   if (!brief || brief.kind !== "ScenarioBrief") {
     issues.push(issue("missing_brief", pack.metadata.id, `找不到场景简报：${briefId ?? ""}`));
+  } else if (brief.metadata.namespace !== pack.metadata.namespace) {
+    issues.push(issue("cross_namespace", pack.metadata.id, `场景简报不在同一 Namespace：${brief.metadata.id}`));
   }
   const cases = Array.isArray(pack.spec.cases) ? pack.spec.cases : [];
   for (const item of cases) {
@@ -245,6 +252,7 @@ function checkStructuredPolicy(
   const kind = stringField(check, "kind");
   const ruleId = stringField(check, "rule");
   const actionId = stringField(check, "action");
+  if (ruleId) assertSameDomainNamespace(policy, ruleId, model, issues);
   if (kind === "forbid_basis") {
     const rule = requirePolicyRule(model, policy, ruleId, issues);
     const basis = stringField(check, "basis");
@@ -278,6 +286,14 @@ function checkStructuredPolicy(
     }
     return;
   }
+  if (kind === "within_in_force_limit") {
+    const rule = requirePolicyRule(model, policy, ruleId, issues);
+    if (rule && !isRecord(rule.spec.limit)) {
+      issues.push(issue("policy_check", policy.metadata.id, "限额策略引用的规则没有单价"));
+    }
+    if (ruleId) assertSameDomainNamespace(policy, ruleId, model, issues);
+    return;
+  }
   if (kind === "human_authorization") {
     const action = actionId ? model.byId.get(actionId) : undefined;
     if (!action || action.kind !== "Action") {
@@ -293,7 +309,9 @@ function checkStructuredPolicy(
     if (policyRoles.length === 0 || !sameRoles(policyRoles, actionRoles)) {
       issues.push(issue("policy_check", policy.metadata.id, "人授权角色必须与 Action 的审批角色一致"));
     }
+    if (actionId) assertSameDomainNamespace(policy, actionId, model, issues);
   }
+  if (ruleId) assertSameDomainNamespace(policy, ruleId, model, issues);
 }
 
 function requirePolicyRule(
@@ -361,6 +379,7 @@ function checkRulePointer(
   if (stringField(other.spec, inverseKey) !== rule.metadata.id) {
     issues.push(issue("rule_version", rule.metadata.id, `替代关系没有互相指向：${pointer}`));
   }
+  assertSameDomainNamespace(rule, pointer, model, issues);
 }
 
 function checkEvalGate(
@@ -411,9 +430,12 @@ function checkExpectedObjects(
   model: SemanticModel,
   issues: ValidationIssue[],
 ): void {
+  const owner = model.byId.get(path);
   for (const objectId of stringList(raw)) {
     if (!model.byId.has(objectId)) {
       issues.push(issue("missing_object", path, `评测用例引用了不存在的对象：${objectId}`));
+    } else if (owner) {
+      assertSameDomainNamespace(owner, objectId, model, issues);
     }
   }
 }
@@ -424,6 +446,23 @@ function checkPrimaryKey(entity: SemanticDocument, issues: ValidationIssue[]): v
     if (!names.has(key)) {
       issues.push(issue("missing_attribute", entity.metadata.id, `主键不是属性：${key}`));
     }
+  }
+}
+
+/**
+ * 现阶段仍拒绝跨 Namespace 引用。
+ * 以后只在显式依赖已发布且当前有效的对象时才允许；被依赖对象废止或升级后，依赖方必须重新评测才能发布。这次不实现放开。
+ */
+function assertSameDomainNamespace(
+  from: SemanticDocument,
+  targetId: string,
+  model: SemanticModel,
+  issues: ValidationIssue[],
+): void {
+  const target = model.byId.get(targetId);
+  if (!target || target.kind === "Company" || target.kind === "Project") return;
+  if (target.metadata.namespace !== from.metadata.namespace) {
+    issues.push(issue("cross_namespace", from.metadata.id, `不能引用其他 Namespace 的对象：${targetId}`));
   }
 }
 

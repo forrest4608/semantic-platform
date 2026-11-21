@@ -60,8 +60,13 @@ describe("对话内核", () => {
 
     const model = loadModel(hrDir);
     expect(() => confirmRelease({ model, patch: proposal.patch, confirmedBy: "  " })).toThrow(HarnessError);
-    const released = confirmRelease({ model, patch: proposal.patch, confirmedBy: "审核人" });
-    expect(released.documents).toHaveLength(model.documents.length);
+    expect(() => confirmRelease({ model, patch: proposal.patch, confirmedBy: "审核人" })).toThrow(HarnessError);
+    try {
+      confirmRelease({ model, patch: proposal.patch, confirmedBy: "审核人" });
+    } catch (error) {
+      expect(error).toMatchObject({ code: "release_blocked" });
+      expect(error instanceof Error ? error.message : "").toContain("未关闭的缺口阻断发布");
+    }
   });
 
   it("拒绝写工具和非法补丁", async () => {

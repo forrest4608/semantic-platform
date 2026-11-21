@@ -30,6 +30,20 @@
               },
               "description": { "type": "string", "minLength": 1 },
               "status": { "enum": ["open", "resolved", "waived"] },
+              "notice": {
+                "enum": ["warning", "acknowledged"],
+                "description": "警告或知悉本身不能作为可发布范围。"
+              },
+              "acceptance": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["kind", "statement"],
+                "description": "书面确认的本期范围，或明确留给人的边界。只有这两种可以进入发布记录。",
+                "properties": {
+                  "kind": { "enum": ["current_period", "left_for_humans"] },
+                  "statement": { "type": "string", "minLength": 1 }
+                }
+              },
               "relatedGoals": {
                 "type": "array",
                 "items": { "type": "string", "pattern": "^G[1-9][0-9]*$" }

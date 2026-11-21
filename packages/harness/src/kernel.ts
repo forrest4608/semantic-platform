@@ -3,7 +3,17 @@
  * 补丁先过我们自己的 schema，人确认发布在另一个函数里，不由 dsh 完成。
  */
 import { validateDocumentSchema, validatePatchSchema, type ObjectKind } from "@semantic/contract";
-import { applyPatch, isRecord, isWriteTool, validateModel, type ModelPatch, type SemanticModel } from "@semantic/kernel";
+import {
+  applyPatch,
+  isRecord,
+  isWriteTool,
+  ModelError,
+  releaseModel,
+  validateModel,
+  type ModelPatch,
+  type ReleaseRecord,
+  type SemanticModel,
+} from "@semantic/kernel";
 import type { LlmConfig } from "./llm-config.ts";
 
 export class HarnessError extends Error {
@@ -13,7 +23,8 @@ export class HarnessError extends Error {
     | "live_call_deferred"
     | "invalid_patch"
     | "write_forbidden"
-    | "release_unconfirmed";
+    | "release_unconfirmed"
+    | "release_blocked";
 
   constructor(code: HarnessError["code"], message: string) {
     super(message);
@@ -72,8 +83,12 @@ export function createDialogueKernel(options: { backend: ProposalBackend; llm: L
   };
 }
 
-/** 人确认后才应用到内存模型。这里不调用写工具，也不访问方舟。 */
-export function confirmRelease(input: { model: SemanticModel; patch: ModelPatch; confirmedBy: string }): SemanticModel {
+/** 人确认后的业务发布。不把 Git 合并或外部工单当作发布门，也不调用写工具。 */
+export function confirmRelease(input: {
+  model: SemanticModel;
+  patch: ModelPatch;
+  confirmedBy: string;
+}): { model: SemanticModel; record: ReleaseRecord } {
   if (input.confirmedBy.trim().length === 0) {
     throw new HarnessError("release_unconfirmed", "发布必须由人确认。");
   }
@@ -82,7 +97,15 @@ export function confirmRelease(input: { model: SemanticModel; patch: ModelPatch;
   if (!report.ok) {
     throw new HarnessError("invalid_patch", report.issues.map((item) => item.message).join("；"));
   }
-  return next;
+  try {
+    const record = releaseModel(next, input.confirmedBy);
+    return { model: next, record };
+  } catch (error) {
+    if (error instanceof ModelError) {
+      throw new HarnessError("release_blocked", error.message);
+    }
+    throw error;
+  }
 }
 
 function assertPatch(value: unknown): ModelPatch {

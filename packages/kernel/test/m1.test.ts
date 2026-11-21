@@ -401,6 +401,22 @@ describe("策略与人授权分开", () => {
       ),
     ).not.toContain("forbid_superseded");
     expect(
+      policyViolations(
+        finance,
+        "finance.meal.2025",
+        { ruleId: "finance.meal.2022", unitAmount: 150, countedDays: 3, reimbursable: 420, personCount: 1 },
+        { asOf: "2024-12-31", subjectType: "员工" },
+      ),
+    ).not.toContain("above_cap");
+    expect(
+      policyViolations(
+        finance,
+        "finance.meal.2025",
+        { ruleId: "finance.meal.2025", unitAmount: 100, countedDays: 3, reimbursable: 420, personCount: 1 },
+        { asOf: "2025-01-01", subjectType: "员工" },
+      ),
+    ).toContain("above_cap");
+    expect(
       quoteLimit(finance, {
         ruleId: "finance.meal.2022",
         asOf: "2024-12-31",

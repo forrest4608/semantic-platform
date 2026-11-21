@@ -36,6 +36,7 @@ interface Trace {
   requiresHrApproval?: boolean;
   remainingLeaveDays?: number;
   unitAmount?: number;
+  personCount?: number;
   cap?: number;
   invoiceAmount?: number;
   reimbursable?: number;
@@ -138,7 +139,9 @@ function judgeTrace(
     trace,
     asOf && subjectType ? { asOf, subjectType } : undefined,
   );
-  if (violations.includes("forbid_basis") || violations.includes("approval")) basisCorrect = false;
+  if (violations.includes("forbid_basis") || violations.includes("approval") || violations.includes("above_cap")) {
+    basisCorrect = false;
+  }
   if (violations.includes("forbid_superseded")) versionCorrect = false;
   const citationCorrect = trace.citation === expected.citation && expected.citation !== undefined;
   const receiptComplete = completeReceipt(spec, trace, fromTool);
@@ -271,6 +274,7 @@ function receiptToTrace(receipt: CalculationReceipt): Trace {
     requiresHrApproval: receipt.requiresHrApproval,
     remainingLeaveDays: receipt.remainingLeaveDays,
     unitAmount: receipt.unitAmount,
+    personCount: receipt.personCount,
     cap: receipt.cap,
     invoiceAmount: receipt.invoiceAmount,
     reimbursable: receipt.reimbursable,
