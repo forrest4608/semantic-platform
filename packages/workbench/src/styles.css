@@ -75,8 +75,89 @@ h2 {
 }
 
 .auth {
-  max-width: 360px;
-  text-align: right;
+  max-width: 280px;
+  display: grid;
+  gap: 8px;
+  justify-items: end;
+}
+
+.selectors {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin: 24px 0;
+}
+
+label {
+  display: grid;
+  gap: 4px;
+  font-family: "IBM Plex Sans", "Noto Sans SC", sans-serif;
+}
+
+select,
+input,
+textarea,
+button {
+  font: inherit;
+}
+
+select,
+input,
+textarea {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #d9d0c3;
+  background: #fffdf8;
+}
+
+button {
+  padding: 8px 14px;
+  border: 0;
+  background: #0f5c56;
+  color: #fffdf8;
+  cursor: pointer;
+}
+
+button:disabled {
+  background: #b7aea2;
+  cursor: not-allowed;
+}
+
+.banner {
+  padding: 12px 14px;
+  background: #fffdf8;
+  border: 1px solid #d9d0c3;
+}
+
+.banner.ok {
+  background: #e7f3ef;
+  border-color: #0f5c56;
+}
+
+.banner.blocked {
+  background: #f8e8e2;
+  border-color: #8c3a2f;
+}
+
+.graph {
+  width: 100%;
+  background: #fffdf8;
+  border: 1px solid #d9d0c3;
+}
+
+.graph rect {
+  fill: #f3efe6;
+  stroke: #0f5c56;
+}
+
+.graph text {
+  font-size: 12px;
+  font-family: "IBM Plex Sans", "Noto Sans SC", sans-serif;
+}
+
+pre {
+  white-space: pre-wrap;
+  font-size: 13px;
 }
 
 .auth button {
@@ -126,12 +207,6 @@ h2 {
   background: #fffdf8;
   border: 1px solid #e2d8c8;
   padding: 10px 12px;
-}
-
-label {
-  display: block;
-  margin-bottom: 6px;
-  font-family: "IBM Plex Sans", "Noto Sans SC", sans-serif;
 }
 
 textarea {

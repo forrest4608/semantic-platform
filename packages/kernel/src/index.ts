@@ -10,13 +10,20 @@ export {
   type ValidationReport,
 } from "./types.ts";
 
-export { canonical, documentsOf, indexDocuments, isRecord } from "./model.ts";
+export { canonical, documentsOf, indexDocuments, isRecord, stringField } from "./model.ts";
 export { loadModel } from "./load.ts";
 export { validateModel } from "./validate.ts";
 export { diffModels } from "./diff.ts";
 export { applyPatch } from "./patch.ts";
 export { evaluateModel, type EvalCaseScore, type EvalReport } from "./eval.ts";
-export { releaseModel, type AcceptedScope, type NamespaceVersion, type ReleaseRecord } from "./release.ts";
+export {
+  previewRelease,
+  releaseModel,
+  type AcceptedScope,
+  type NamespaceVersion,
+  type ReleasePreview,
+  type ReleaseRecord,
+} from "./release.ts";
 export {
   assessTeachingCase,
   judgeKnownFailure,

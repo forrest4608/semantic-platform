@@ -33,25 +33,45 @@ export interface ReleaseRecord {
   acceptedScopes: AcceptedScope[];
 }
 
+export interface ReleasePreview {
+  releasable: boolean;
+  blockedBy: string[];
+  evalPassed: boolean;
+  acceptedScopes: AcceptedScope[];
+  namespaceVersions: NamespaceVersion[];
+  contractVersion: typeof API_VERSION;
+}
+
+/** 发布前检查。不写记录，也不接受调用方自报的确认人。 */
+export function previewRelease(model: SemanticModel): ReleasePreview {
+  const blockedBy = blockingGaps(model);
+  const evalPassed = evaluateModel(model).ok;
+  if (!evalPassed) blockedBy.push("评测未通过，不能发布");
+  return {
+    releasable: blockedBy.length === 0,
+    blockedBy,
+    evalPassed,
+    acceptedScopes: collectAcceptedScopes(model),
+    namespaceVersions: namespaceVersions(model),
+    contractVersion: API_VERSION,
+  };
+}
+
 export function releaseModel(model: SemanticModel, approvedBy: string): ReleaseRecord {
   const name = approvedBy.trim();
   if (!name) {
     throw new ModelError("发布必须由人确认", [issue("发布必须由人确认")]);
   }
-  const versions = namespaceVersions(model);
-  const acceptedScopes = collectAcceptedScopes(model);
-  const blockedBy = blockingGaps(model);
-  const evalReport = evaluateModel(model);
-  if (!evalReport.ok) blockedBy.push("评测未通过，不能发布");
-  if (blockedBy.length > 0) {
-    throw new ModelError(blockedBy.join("；"), blockedBy.map((message) => issue(message)));
+  const preview = previewRelease(model);
+  if (!preview.releasable) {
+    throw new ModelError(preview.blockedBy.join("；"), preview.blockedBy.map((message) => issue(message)));
   }
   return {
     approvedBy: name,
-    contractVersion: API_VERSION,
-    namespaceVersions: versions,
+    contractVersion: preview.contractVersion,
+    namespaceVersions: preview.namespaceVersions,
     evalPassed: true,
-    acceptedScopes,
+    acceptedScopes: preview.acceptedScopes,
   };
 }
 
