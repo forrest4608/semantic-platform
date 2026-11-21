@@ -113,7 +113,7 @@ Ontology 是概念分组，不是单独的 kind。它包括 Entity、Relation、
 | --- | --- |
 | spec.items[].kind | `unknown` 或 `conflict` |
 | spec.items[].status | `open`、`resolved`、`waived`。`resolved` 表示缺口已被回答。`open` 和单独的 `waived` 不能发布 |
-| spec.items[].notice | 可选：`warning` 或 `acknowledged`。只有警告或知悉时仍然阻断发布 |
+| spec.items[].notice | 可选：`warning` 或 `acknowledged`。缺口仍未回答时，只有警告或知悉仍然阻断发布。`status: resolved` 表示已经回答，即使还留着这个标记也不阻断 |
 | spec.items[].acceptance | 可选。`current_period` 是书面确认的本期范围，`left_for_humans` 是明确留给人的边界。二者都会进入发布记录 |
 | spec.items[].relatedGoals | 可选，须能在模型的目标编号里找到 |
 

@@ -56,7 +56,7 @@ export function policyViolations(
     if (check.kind === "require_approval_when_exceeded" && check.rule === subjectRuleId) {
       if (approvalDecisionMismatches(model, check, trace)) violations.push("approval");
     }
-    if (check.kind === "within_in_force_limit" && exceedsInForceLimit(model, check, trace, at)) {
+    if (check.kind === "within_in_force_limit" && exceedsInForceLimit(model, check, trace, at, subjectRuleId)) {
       violations.push("above_cap");
     }
   }
@@ -84,17 +84,21 @@ function exceedsInForceLimit(
   check: Record<string, unknown>,
   trace: PolicyTrace,
   at: { asOf: string; subjectType: string } | undefined,
+  evaluatedRuleId: string | undefined,
 ): boolean {
-  if (!at) return false;
+  if (!at || !evaluatedRuleId) return false;
   const anchorId = stringField(check, "rule");
   const anchor = anchorId ? model.byId.get(anchorId) : undefined;
+  const evaluated = model.byId.get(evaluatedRuleId);
   const topic = anchor ? stringField(anchor.spec, "topic") : undefined;
-  if (!topic) return false;
+  const evaluatedTopic = evaluated ? stringField(evaluated.spec, "topic") : undefined;
+  if (!anchor || !evaluated || !topic || topic !== evaluatedTopic) return false;
+  if (anchor.metadata.namespace !== evaluated.metadata.namespace) return false;
   let version;
   try {
     version = findInForceRule(model, { topic, subjectType: at.subjectType, asOf: at.asOf });
   } catch {
-    return true;
+    return false;
   }
   const rule = model.byId.get(version.ruleId);
   const limit = rule && isRecord(rule.spec.limit) ? rule.spec.limit.amount : undefined;

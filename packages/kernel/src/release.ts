@@ -62,11 +62,11 @@ function blockingGaps(model: SemanticModel): string[] {
     for (const item of items) {
       if (!isRecord(item)) continue;
       if (acceptedScope(item)) continue;
+      if (item.status === "resolved") continue;
       if (item.notice === "warning" || item.notice === "acknowledged") {
         blocked.push(`仅有警告或知悉，不能作为可发布范围：${gap.metadata.id} ${itemId(item)}`);
         continue;
       }
-      if (item.status === "resolved") continue;
       blocked.push(`未关闭的缺口阻断发布：${gap.metadata.id} ${itemId(item)}`);
     }
   }

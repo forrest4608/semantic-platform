@@ -1,7 +1,7 @@
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { ModelError, type SemanticDocument } from "../src/types.ts";
-import { indexDocuments, loadModel, releaseModel, validateModel } from "../src/index.ts";
+import { evaluateModel, indexDocuments, loadModel, policyViolations, releaseModel, validateModel } from "../src/index.ts";
 
 const hrDir = fileURLToPath(new URL("../../../examples/hr-leave", import.meta.url));
 const financeDir = fileURLToPath(new URL("../../../examples/finance-expense", import.meta.url));
@@ -62,6 +62,13 @@ describe("未关闭缺口阻断发布", () => {
     }
   });
 
+  it("已经回答的缺口即使还留着警告标记，也不阻断发布", () => {
+    const model = withGapNotice(loadModel(hrDir), "warning", "resolved");
+    const record = releaseModel(model, "审核人");
+    expect(record.evalPassed).toBe(true);
+    expect(record.acceptedScopes).toEqual([]);
+  });
+
   it("已澄清且未再声明范围的缺口不阻断报销发布", () => {
     const record = releaseModel(loadModel(financeDir), "财务负责人");
     expect(record.evalPassed).toBe(true);
@@ -96,6 +103,26 @@ describe("跨 Namespace", () => {
     expect(report.ok).toBe(false);
     expect(report.issues.some((item) => item.code === "cross_namespace")).toBe(true);
   });
+
+  it("餐费限额不套用到请假规则族", () => {
+    const hr = loadModel(hrDir);
+    const finance = loadModel(financeDir);
+    const merged = indexDocuments([
+      ...hr.documents,
+      ...finance.documents.filter((document) => document.metadata.id !== "fixture.teaching"),
+    ]);
+    expect(
+      policyViolations(
+        merged,
+        "hr.leave.rule.approval",
+        { ruleId: "hr.leave.rule.approval", basis: "working_day", countedDays: 2, requiresHrApproval: false },
+        { asOf: "2026-11-18", subjectType: "全职员工" },
+      ),
+    ).not.toContain("above_cap");
+    const leave = evaluateModel(merged).results.find((item) => item.caseId === "eval_hr_001");
+    expect(leave?.releaseGate?.basisCorrect).toBe(true);
+    expect(leave?.passed).toBe(true);
+  });
 });
 
 function withGapAcceptance(
@@ -105,8 +132,12 @@ function withGapAcceptance(
   return mapGapItem(model, (item) => ({ ...item, acceptance }));
 }
 
-function withGapNotice(model: ReturnType<typeof loadModel>, notice: "warning" | "acknowledged") {
-  return mapGapItem(model, (item) => ({ ...item, notice }));
+function withGapNotice(
+  model: ReturnType<typeof loadModel>,
+  notice: "warning" | "acknowledged",
+  status?: "resolved",
+) {
+  return mapGapItem(model, (item) => ({ ...item, notice, ...(status ? { status } : {}) }));
 }
 
 function mapGapItem(
