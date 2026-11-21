@@ -1,6 +1,7 @@
 /**
  * 按对象 id 比较两版模型，产出可复查的补丁。
  * 同一 id 更换 kind 时拆成 remove + add。
+ * 同一 id 的操作按 remove、replace、add 排序，这样新 kind 字母序更靠前时也不会先新增。
  */
 import { API_VERSION } from "@semantic/contract";
 import { canonical } from "./model.ts";
@@ -59,9 +60,9 @@ export function diffModels(base: SemanticModel, head: SemanticModel): ModelPatch
 function compareOperations(left: PatchOperation, right: PatchOperation): number {
   const byId = left.id.localeCompare(right.id);
   if (byId !== 0) return byId;
-  const byKind = left.targetKind.localeCompare(right.targetKind);
-  if (byKind !== 0) return byKind;
-  return OP_ORDER[left.op] - OP_ORDER[right.op];
+  const byOp = OP_ORDER[left.op] - OP_ORDER[right.op];
+  if (byOp !== 0) return byOp;
+  return left.targetKind.localeCompare(right.targetKind);
 }
 
 function cloneDocument(document: SemanticDocument): SemanticDocument {
