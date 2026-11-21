@@ -1,5 +1,6 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { api, ApiError, type AskResult, type CompanyView, type StoredRelease, type Workspace } from "./api.ts";
+import { sameSelection } from "./selection.ts";
 
 export function App() {
   const [username, setUsername] = useState<string | null>(null);
@@ -30,6 +31,8 @@ export function App() {
   const company = companies.find((item) => item.id === companyId);
   const project = company?.projects.find((item) => item.id === projectId);
   const scenario = project?.scenarios.find((item) => item.id === scenarioId);
+  const selection = useRef({ projectId, scenarioId });
+  selection.current = { projectId, scenarioId };
 
   useEffect(() => {
     if (!projectId || !scenarioId) {
@@ -40,7 +43,10 @@ export function App() {
     setLoading(true);
     setLoadError("");
     setAnswer(null);
+    setAskError("");
     setLatest(null);
+    setReleaseError("");
+    setReleasing(false);
     void api
       .workspace(projectId, scenarioId)
       .then((view) => {
@@ -81,35 +87,44 @@ export function App() {
 
   async function onAsk(event: FormEvent) {
     event.preventDefault();
-    if (!projectId) return;
+    const requested = { projectId, scenarioId };
+    if (!requested.projectId) return;
     setAsking(true);
     setAskError("");
     try {
-      setAnswer(await api.ask(projectId, question));
+      const result = await api.ask(requested.projectId, question);
+      if (!sameSelection(requested, selection.current)) return;
+      setAnswer(result);
     } catch (error) {
+      if (!sameSelection(requested, selection.current)) return;
       setAnswer(null);
       setAskError(error instanceof Error ? error.message : "试问失败");
     } finally {
-      setAsking(false);
+      if (sameSelection(requested, selection.current)) setAsking(false);
     }
   }
 
   async function onRelease() {
-    if (!projectId) return;
+    const requested = { projectId, scenarioId };
+    if (!requested.projectId) return;
     setReleasing(true);
     setReleaseError("");
     try {
-      const body = await api.release(projectId);
+      const body = await api.release(requested.projectId);
+      if (!sameSelection(requested, selection.current)) return;
       setLatest(body.record);
-      const saved = await api.releases(projectId);
+      const saved = await api.releases(requested.projectId);
+      if (!sameSelection(requested, selection.current)) return;
       setRecords(saved.records);
-      const workspaceNow = await api.workspace(projectId, scenarioId);
+      const workspaceNow = await api.workspace(requested.projectId, requested.scenarioId);
+      if (!sameSelection(requested, selection.current)) return;
       setWorkspace(workspaceNow);
     } catch (error) {
+      if (!sameSelection(requested, selection.current)) return;
       setLatest(null);
       setReleaseError(error instanceof ApiError ? error.message : "发布失败");
     } finally {
-      setReleasing(false);
+      if (sameSelection(requested, selection.current)) setReleasing(false);
     }
   }
 
@@ -135,6 +150,7 @@ export function App() {
               setProjectId("");
               setScenarioId("");
             }}
+            disabled={releasing}
           >
             <option value="">请选择</option>
             {companies.map((item) => (
@@ -150,7 +166,7 @@ export function App() {
               setProjectId(event.target.value);
               setScenarioId("");
             }}
-            disabled={!company}
+            disabled={!company || releasing}
           >
             <option value="">请选择</option>
             {company?.projects.map((item) => (
@@ -160,7 +176,7 @@ export function App() {
         </label>
         <label>
           场景
-          <select value={scenarioId} onChange={(event) => setScenarioId(event.target.value)} disabled={!project}>
+          <select value={scenarioId} onChange={(event) => setScenarioId(event.target.value)} disabled={!project || releasing}>
             <option value="">请选择</option>
             {project?.scenarios.map((item) => (
               <option key={item.id} value={item.id}>{item.name}</option>

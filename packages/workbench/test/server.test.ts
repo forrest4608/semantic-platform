@@ -1,10 +1,12 @@
-import { mkdtempSync } from "node:fs";
+import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterEach, describe, expect, it } from "vitest";
 import { liveHarnessHook } from "../server/model-service.ts";
+import { FileReleaseStore, type StoredRelease } from "../server/store.ts";
 import { startWorkbench } from "../server/http.ts";
+import { sameSelection } from "../src/selection.ts";
 
 const repoRoot = fileURLToPath(new URL("../../../", import.meta.url));
 const password = "test-only-admin-password";
@@ -103,7 +105,44 @@ describe("工作台 API", () => {
   it("实时 Harness 接入口不会被调用", () => {
     expect(() => liveHarnessHook()).toThrow(/未接入/);
   });
+
+  it("已有发布文件损坏时拒绝追加，不改写原文件", () => {
+    const file = join(mkdtempSync(join(tmpdir(), "semantic-releases-")), "releases.json");
+    const original = '{"records":[{"id":"keep","projectId":"fixture.teaching.expense"}]}\nnot-json';
+    writeFileSync(file, original, "utf8");
+    const store = new FileReleaseStore(file);
+    expect(() => store.append(sampleRelease("new"))).toThrow(/无法读取/);
+    expect(readFileSync(file, "utf8")).toBe(original);
+    expect(() => store.list("fixture.teaching.expense")).toThrow(/无法读取/);
+  });
+
+  it("发布文件不存在时写入第一条，已有记录会保留", () => {
+    const file = join(mkdtempSync(join(tmpdir(), "semantic-releases-")), "releases.json");
+    const store = new FileReleaseStore(file);
+    store.append(sampleRelease("first"));
+    store.append(sampleRelease("second"));
+    expect(store.list("fixture.teaching.expense").map((record) => record.id)).toEqual(["first", "second"]);
+  });
+
+  it("切换项目后不再采用上一次发布的页面结果", () => {
+    const requested = { projectId: "fixture.teaching.expense", scenarioId: "finance.brief.meal" };
+    expect(sameSelection(requested, requested)).toBe(true);
+    expect(sameSelection(requested, { projectId: "fixture.teaching.leave", scenarioId: "hr.leave.brief.approval" })).toBe(false);
+  });
 });
+
+function sampleRelease(id: string): StoredRelease {
+  return {
+    id,
+    projectId: "fixture.teaching.expense",
+    createdAt: "2026-11-21T00:00:00.000Z",
+    approvedBy: "admin",
+    contractVersion: "semantic.platform/v1",
+    namespaceVersions: [],
+    evalPassed: true,
+    acceptedScopes: [],
+  };
+}
 
 async function start() {
   const server = await startWorkbench({

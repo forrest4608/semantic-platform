@@ -36,11 +36,32 @@ export class FileReleaseStore {
   }
 
   private read(): FileShape {
+    let text: string;
     try {
-      const parsed = JSON.parse(readFileSync(this.file, "utf8")) as FileShape;
-      return { records: Array.isArray(parsed.records) ? parsed.records : [] };
-    } catch {
-      return { records: [] };
+      text = readFileSync(this.file, "utf8");
+    } catch (error) {
+      // 只有文件还不存在时才当作空库。读失败或内容损坏时不能当成空库再写回去。
+      if (isMissingFile(error)) return { records: [] };
+      throw error;
     }
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(text);
+    } catch {
+      throw new Error(`发布记录无法读取：${this.file}`);
+    }
+    if (!isFileShape(parsed)) {
+      throw new Error(`发布记录格式不正确：${this.file}`);
+    }
+    return parsed;
   }
+}
+
+function isMissingFile(error: unknown): boolean {
+  return typeof error === "object" && error !== null && "code" in error && error.code === "ENOENT";
+}
+
+function isFileShape(value: unknown): value is FileShape {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) return false;
+  return Array.isArray((value as { records?: unknown }).records);
 }
