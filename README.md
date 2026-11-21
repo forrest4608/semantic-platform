@@ -44,13 +44,14 @@ pnpm test
 pnpm validate:examples
 pnpm eval:examples
 pnpm export:examples
+pnpm dev:workbench:api   # 需要 LOCAL_ADMIN_PASSWORD
 pnpm dev:workbench
 pnpm mcp   # stdio, SEMANTIC_MODEL_DIR defaults to examples/hr-leave
 ```
 
 `semantic export-osi <dir> --target osi|metricflow|snowflake` selects the OSI stub or a metric-compiler stub. The default target is `osi`.
 
-Authentication is not wired up. Copy `config/auth.example.yaml` when a real issuer exists. The local admin username is `admin`; the password is read from `LOCAL_ADMIN_PASSWORD` and is not stored in the repo. The workbench buttons only switch a placeholder session label.
+The workbench API checks the local admin username `admin` against `LOCAL_ADMIN_PASSWORD`. The password is not stored in the repo. Enterprise SSO is configured in `config/auth.example.yaml` but is not connected. Start `pnpm dev:workbench:api` and `pnpm dev:workbench`, then open the Vite URL. Choose 教学夹具公司, a project, and a scenario. Asking a fixture question returns a tool receipt. Leave stays blocked by the open sick-leave gap. Expense can be released by the logged-in admin, and the record can be read back. Git merges and tickets are not a release gate.
 
 ## What M1 runs
 

@@ -8,12 +8,13 @@
     "node": ">=22"
   },
   "scripts": {
-    "lint": "tsc -p packages/contract --noEmit && tsc -p packages/kernel --noEmit && tsc -p packages/cli --noEmit && tsc -p packages/mcp-server --noEmit && tsc -p packages/harness --noEmit && tsc -p packages/workbench --noEmit && node scripts/check-terminology.mjs",
+    "lint": "tsc -p packages/contract --noEmit && tsc -p packages/kernel --noEmit && tsc -p packages/cli --noEmit && tsc -p packages/mcp-server --noEmit && tsc -p packages/harness --noEmit && tsc -p packages/workbench --noEmit && tsc -p packages/workbench/tsconfig.server.json --noEmit && node scripts/check-terminology.mjs",
     "test": "vitest run",
     "validate:examples": "node packages/cli/src/index.ts validate examples/hr-leave && node packages/cli/src/index.ts validate examples/finance-expense",
     "eval:examples": "node packages/cli/src/index.ts eval examples/hr-leave && node packages/cli/src/index.ts eval examples/finance-expense",
     "export:examples": "node packages/cli/src/index.ts export-osi examples/hr-leave",
     "dev:workbench": "pnpm --filter @semantic/workbench dev",
+    "dev:workbench:api": "node packages/workbench/server/main.ts",
     "build:workbench": "pnpm --filter @semantic/workbench build",
     "mcp": "node packages/mcp-server/src/index.ts"
   },

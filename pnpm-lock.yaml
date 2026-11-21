@@ -76,6 +76,12 @@ importers:
 
   packages/workbench:
     dependencies:
+      '@semantic/kernel':
+        specifier: workspace:*
+        version: link:../kernel
+      js-yaml:
+        specifier: 4.3.2
+        version: 4.3.2
       react:
         specifier: 19.2.0
         version: 19.2.0
@@ -83,6 +89,9 @@ importers:
         specifier: 19.2.0
         version: 19.2.0(react@19.2.0)
     devDependencies:
+      '@types/js-yaml':
+        specifier: 4.0.9
+        version: 4.0.9
       '@types/react':
         specifier: 19.2.2
         version: 19.2.2
