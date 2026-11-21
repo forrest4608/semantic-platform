@@ -33,6 +33,22 @@ importers:
         specifier: 8.20.0
         version: 8.20.0
 
+  packages/harness:
+    dependencies:
+      '@semantic/contract':
+        specifier: workspace:*
+        version: link:../contract
+      '@semantic/kernel':
+        specifier: workspace:*
+        version: link:../kernel
+      js-yaml:
+        specifier: 4.3.2
+        version: 4.3.2
+    devDependencies:
+      '@types/js-yaml':
+        specifier: 4.0.9
+        version: 4.0.9
+
   packages/kernel:
     dependencies:
       '@semantic/contract':

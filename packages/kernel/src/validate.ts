@@ -57,9 +57,13 @@ export function validateModel(model: SemanticModel): ValidationReport {
   for (const pack of documentsOf(model, "CasePack")) {
     checkCasePack(pack, model, caseIds, issues);
   }
+  for (const rule of documentsOf(model, "Rule")) {
+    checkRule(rule, model, issues);
+  }
   for (const evalCase of documentsOf(model, "EvalCase")) {
     rememberCaseId(caseIds, evalCase.metadata.id, evalCase.metadata.id, issues);
     checkExpectedObjects(evalCase.metadata.id, evalCase.spec.expectedObjects, model, issues);
+    checkEvalGate(evalCase.metadata.id, evalCase.spec, model, issues);
   }
 
   for (const entity of entities.values()) {
@@ -188,6 +192,95 @@ function checkCasePack(
     if (!isRecord(item) || typeof item.id !== "string") continue;
     rememberCaseId(caseIds, item.id, pack.metadata.id, issues);
     checkExpectedObjects(pack.metadata.id, item.expectedObjects, model, issues);
+    checkEvalGate(pack.metadata.id, item, model, issues);
+  }
+}
+
+function checkRule(rule: SemanticDocument, model: SemanticModel, issues: ValidationIssue[]): void {
+  const replaces = stringField(rule.spec, "replaces");
+  const replacedBy = stringField(rule.spec, "replacedBy");
+  const effectiveFrom = stringField(rule.spec, "effectiveFrom");
+  const supersededAt = stringField(rule.spec, "supersededAt");
+  if (replaces) checkRulePointer(rule, model, replaces, "replacedBy", issues);
+  if (replacedBy) {
+    checkRulePointer(rule, model, replacedBy, "replaces", issues);
+    if (!supersededAt) {
+      issues.push(issue("rule_version", rule.metadata.id, "被替代的规则必须写废止日"));
+    }
+  }
+  if (supersededAt && !replacedBy) {
+    issues.push(issue("rule_version", rule.metadata.id, "写了废止日就必须指向替代它的规则"));
+  }
+  if (effectiveFrom && supersededAt && supersededAt <= effectiveFrom) {
+    issues.push(issue("rule_version", rule.metadata.id, "废止日必须晚于生效日"));
+  }
+  const basis = stringField(rule.spec, "basis");
+  const threshold = isRecord(rule.spec.threshold) ? rule.spec.threshold : undefined;
+  if (threshold && stringField(threshold, "unit") !== basis) {
+    issues.push(issue("rule_basis", rule.metadata.id, "门槛单位必须与计算基准一致"));
+  }
+  const limit = isRecord(rule.spec.limit) ? rule.spec.limit : undefined;
+  if (limit && stringField(limit, "unit") !== basis) {
+    issues.push(issue("rule_basis", rule.metadata.id, "限额单位必须与计算基准一致"));
+  }
+}
+
+function checkRulePointer(
+  rule: SemanticDocument,
+  model: SemanticModel,
+  pointer: string,
+  inverseKey: "replaces" | "replacedBy",
+  issues: ValidationIssue[],
+): void {
+  const other = model.byId.get(pointer);
+  if (!other || other.kind !== "Rule") {
+    issues.push(issue("missing_rule", rule.metadata.id, `替代关系不是规则：${pointer}`));
+    return;
+  }
+  if (stringField(other.spec, inverseKey) !== rule.metadata.id) {
+    issues.push(issue("rule_version", rule.metadata.id, `替代关系没有互相指向：${pointer}`));
+  }
+}
+
+function checkEvalGate(
+  path: string,
+  spec: Record<string, unknown>,
+  model: SemanticModel,
+  issues: ValidationIssue[],
+): void {
+  const caseClass = stringField(spec, "caseClass");
+  if (!caseClass) return;
+  const briefId = stringField(spec, "scenarioBrief");
+  if (briefId) {
+    const brief = model.byId.get(briefId);
+    if (!brief || brief.kind !== "ScenarioBrief") {
+      issues.push(issue("missing_brief", path, `找不到场景简报：${briefId}`));
+    }
+  }
+  const ruleId = stringField(spec, "rule");
+  const rule = ruleId ? model.byId.get(ruleId) : undefined;
+  if (!rule || rule.kind !== "Rule") {
+    issues.push(issue("missing_rule", path, `评测用例没有指向规则：${ruleId ?? ""}`));
+  }
+  for (const interference of stringList(spec.interferenceRules)) {
+    const document = model.byId.get(interference);
+    if (!document || document.kind !== "Rule") {
+      issues.push(issue("missing_rule", path, `干扰规则不存在：${interference}`));
+    }
+  }
+  if (!stringField(spec, "asOf") || !stringField(spec, "subjectType") || !stringField(spec, "evidenceQuery")) {
+    issues.push(issue("eval_gate", path, "发布门禁用例必须写查询时点、主体和证据检索词"));
+  }
+  if (!isRecord(spec.facts) || !isRecord(spec.expected)) {
+    issues.push(issue("eval_gate", path, "发布门禁用例必须写案件事实和期望回执"));
+  }
+  const failures = Array.isArray(spec.knownFailures) ? spec.knownFailures : [];
+  if (failures.length === 0) {
+    issues.push(issue("eval_gate", path, "发布门禁用例必须带上已知失败模式"));
+  }
+  const conditions = stringList(spec.failureConditions);
+  if (conditions.length === 0) {
+    issues.push(issue("eval_gate", path, "发布门禁用例必须写明失败条件"));
   }
 }
 

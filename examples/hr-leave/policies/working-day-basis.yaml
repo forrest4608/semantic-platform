@@ -1,0 +1,17 @@
+apiVersion: semantic.platform/v1
+kind: Policy
+metadata:
+  id: hr.leave.policy.working_day_basis
+  name: 禁止用自然日时长作为审批依据
+  namespace: hr.leave
+  description: 请假审批门槛只认工作日。把周末算进时长而触发人事审批，应被拦住。
+spec:
+  effect: deny
+  subjects:
+    - type: role
+      value: agent
+  resources:
+    - hr.leave.rule.approval
+  operations:
+    - invoke
+  condition: 禁止用自然日时长作为审批依据

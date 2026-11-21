@@ -36,12 +36,14 @@ describe("示例模型", () => {
     expect(report.ok).toBe(true);
   });
 
-  it("三则黄金用例全部通过", () => {
+  it("原有黄金用例仍然通过", () => {
     const report = evaluateModel(loadModel(exampleDir));
-    expect(report.passed).toBe(3);
     expect(report.failed).toBe(0);
     expect(report.ok).toBe(true);
     expect(report.meanScore).toBe(1);
+    expect(report.results.filter((item) => item.passed).map((item) => item.caseId)).toEqual(
+      expect.arrayContaining(["EC-1", "EC-2", "EC-3", "eval_hr_001"]),
+    );
   });
 });
 
@@ -214,7 +216,7 @@ describe("评测占位打分", () => {
     );
     const report = evaluateModel(next);
     expect(report.skipped).toBe(1);
-    expect(report.passed).toBe(2);
+    expect(report.passed).toBe(3);
     expect(report.ok).toBe(true);
   });
 });

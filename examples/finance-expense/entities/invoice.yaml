@@ -1,0 +1,23 @@
+apiVersion: semantic.platform/v1
+kind: Entity
+metadata:
+  id: finance.Invoice
+  name: Invoice
+  namespace: finance
+  description: 发票
+spec:
+  primaryKey:
+    - invoice_id
+  attributes:
+    - name: invoice_id
+      type: string
+      required: true
+    - name: claim_id
+      type: string
+      required: true
+    - name: amount
+      type: number
+      required: true
+    - name: category
+      type: string
+      required: true

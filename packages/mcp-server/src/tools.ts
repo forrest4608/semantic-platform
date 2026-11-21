@@ -1,12 +1,23 @@
 /**
  * MCP 工具的纯函数实现。
- * 读工具查询已加载契约；写工具在 M0 一律返回未实现，并带上 Action 审批信息。
+ * 读工具查询契约、版本、证据和计算回执。
+ * 写工具仍不落系统：未审批返回审批门，已审批也只返回未执行。
+ * invoke_action 与 propose_patch 保持原来的未实现行为。
  */
-import { documentsOf, isRecord } from "@semantic/kernel";
+import {
+  documentsOf,
+  getLeaveDays,
+  getLimit,
+  getTrip,
+  isRecord,
+  ModelError,
+  queryRuleVersion,
+  retrieveEvidence,
+} from "@semantic/kernel";
 import type { SemanticDocument, SemanticModel } from "@semantic/kernel";
 
 export interface ToolError {
-  code: "not_implemented" | "not_found" | "invalid_argument";
+  code: "not_implemented" | "not_found" | "invalid_argument" | "rule_not_in_force" | "approval_required" | "not_executed";
   message: string;
   approvalRequired?: boolean;
   actionId?: string;
@@ -101,6 +112,117 @@ export function proposePatch(): ToolFailure {
       message: "M0 不接收模型补丁。变更需由人工确认后再发布。",
     },
   };
+}
+
+export function queryRule(model: SemanticModel, ruleId: string, subjectType: string, asOf: string) {
+  return fromKernel(() => queryRuleVersion(model, { ruleId, subjectType, asOf }));
+}
+
+export function readLeaveDays(model: SemanticModel, caseId: string) {
+  return fromKernel(() => getLeaveDays(model, caseId));
+}
+
+export function readTrip(model: SemanticModel, caseId: string) {
+  return fromKernel(() => getTrip(model, caseId));
+}
+
+export function readLimit(model: SemanticModel, caseId: string) {
+  return fromKernel(() => getLimit(model, caseId));
+}
+
+export function readEvidence(model: SemanticModel, query: string, asOf: string, subjectType: string) {
+  return fromKernel(() => retrieveEvidence(model, { query, asOf, subjectType }));
+}
+
+export function readEvalCase(model: SemanticModel, caseId: string): ToolResponse<SemanticDocument> {
+  const trimmed = caseId.trim();
+  if (!trimmed) return { ok: false, error: { code: "invalid_argument", message: "id 不能为空" } };
+  const document = model.byId.get(trimmed);
+  if (!document || document.kind !== "EvalCase") {
+    return { ok: false, error: { code: "not_found", message: `找不到评测用例：${trimmed}` } };
+  }
+  return { ok: true, data: document };
+}
+
+export interface WriteConfirmation {
+  approvedBy?: string;
+  role?: string;
+}
+
+/** 写工具只核对审批门，不修改模型，也不写业务系统。 */
+export function approveLeave(model: SemanticModel, actionId: string, confirmation: WriteConfirmation = {}): ToolFailure {
+  return refuseWrite(model, actionId, confirmation);
+}
+
+export function submitExpense(model: SemanticModel, actionId: string, confirmation: WriteConfirmation = {}): ToolFailure {
+  return refuseWrite(model, actionId, confirmation);
+}
+
+export function rejectEvalIngest(confirmation: WriteConfirmation = {}): ToolFailure {
+  if (!confirmation.approvedBy?.trim()) {
+    return {
+      ok: false,
+      error: {
+        code: "approval_required",
+        approvalRequired: true,
+        message: "评测用例入库会改知识库，必须经审批。默认运行时不执行。",
+      },
+    };
+  }
+  return {
+    ok: false,
+    error: {
+      code: "not_executed",
+      approvalRequired: true,
+      message: "M1 不通过 MCP 写入知识库。",
+    },
+  };
+}
+
+function refuseWrite(model: SemanticModel, actionId: string, confirmation: WriteConfirmation): ToolFailure {
+  const document = model.byId.get(actionId);
+  if (!document || document.kind !== "Action") {
+    return { ok: false, error: { code: "not_found", message: `找不到动作：${actionId}`, actionId } };
+  }
+  const approval = isRecord(document.spec.approval) ? document.spec.approval : undefined;
+  const approvalRequired = approval?.required === true;
+  const roles = Array.isArray(approval?.approverRoles)
+    ? approval.approverRoles.filter((role): role is string => typeof role === "string")
+    : [];
+  const roleOk = !approvalRequired || (confirmation.role !== undefined && roles.includes(confirmation.role));
+  if (!confirmation.approvedBy?.trim() || !roleOk) {
+    return {
+      ok: false,
+      error: {
+        code: "approval_required",
+        actionId,
+        approvalRequired,
+        message: "写入须经审批门禁。默认运行时不执行写回。",
+      },
+    };
+  }
+  return {
+    ok: false,
+    error: {
+      code: "not_executed",
+      actionId,
+      approvalRequired,
+      message: "审批门禁已核对，M1 仍不写入系统。",
+    },
+  };
+}
+
+function fromKernel<T>(fn: () => T): ToolResponse<T> {
+  try {
+    return { ok: true, data: fn() };
+  } catch (error) {
+    if (error instanceof ModelError) {
+      const coded = error.issues.find((item) => item.code === "rule_not_in_force" || item.code === "not_found");
+      const code = coded?.code === "rule_not_in_force" || coded?.code === "not_found" ? coded.code : "invalid_argument";
+      return { ok: false, error: { code, message: error.message } };
+    }
+    throw error;
+  }
 }
 
 function summarize(document: SemanticDocument): CatalogHit {

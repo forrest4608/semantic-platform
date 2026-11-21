@@ -1,0 +1,21 @@
+apiVersion: semantic.platform/v1
+kind: ScenarioBrief
+metadata:
+  id: finance.brief.meal
+  name: 差旅餐费能否报销
+  namespace: finance
+  description: 李四周三赴北京、周五返回。只构建支撑这三个需求目标的对象。
+spec:
+  goals:
+    - id: G1
+      statement: 判断能否报销
+      priority: must
+    - id: G2
+      statement: 计算可报金额
+      priority: must
+    - id: G3
+      statement: 提交报销单
+      priority: must
+  sources:
+    - 《差旅报销管理办法》2025 版第 7 条
+    - 2022 旧规「短期出差包干 150 元/天」

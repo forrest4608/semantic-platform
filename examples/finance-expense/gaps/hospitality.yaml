@@ -1,0 +1,16 @@
+apiVersion: semantic.platform/v1
+kind: GapLog
+metadata:
+  id: finance.gap.hospitality
+  name: 招待费不并入餐费
+  namespace: finance
+  description: 已澄清：招待费走另一制度，不并入本案餐费限额。
+spec:
+  items:
+    - id: GAP-hospitality
+      kind: unknown
+      description: 客户招待是否另算：招待费走另一制度，不并入本案餐费限额
+      status: resolved
+      relatedGoals:
+        - G1
+        - G2

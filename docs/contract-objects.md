@@ -113,6 +113,32 @@ CasePack 还要指向一份 ScenarioBrief（`spec.scenarioBrief`）。
 | spec.source.locator | 系统内的定位符 |
 | spec.fieldMappings | `semantic` 到 `physical`。目标若是实体，`semantic` 必须是它的属性 |
 
+## Rule
+
+可按业务发生时点查询的规则。同一 `topic` 下，现行版和已废止版可以同时被检索到，但只有现行版能进入计算。
+
+| 字段 | 说明 |
+| --- | --- |
+| spec.topic | 主题。证据检索命中其中一条时，会把同主题的其他版本一起返回 |
+| spec.citation | 必须回链的条文 |
+| spec.basis | `working_day` 工作日，或 `calendar_day` 自然日 |
+| spec.subjectTypes | 这条规则适用的主体 |
+| spec.effectiveFrom | 可选生效日。不写表示材料没有给出生效日 |
+| spec.supersededAt | 可选废止日。从这天起不再作为计算依据，并且必须有 `replacedBy` |
+| spec.replaces / spec.replacedBy | 替代了哪一版，以及被哪一版替代。两边要互相指向 |
+| spec.threshold | 可选。`comparison` 固定为 `gt`，表示「超过」 |
+| spec.limit | 可选。`per` 固定为 `person` |
+| spec.includeEndpoints | 为 true 时，出发日和返回日都必须计入 |
+| spec.evidence | 可检索的标题和摘录 |
+
+教学用例里的日期只把「2025 版 / 2022 旧规」落到可查询的生效日和废止日，不是客户制度的承诺日。请假规则的制度文本没有写这两个日期。
+
+## EvalCase 的发布门禁
+
+原有问句、期望答案和 `expectedObjects` 仍然有效。带 `caseClass` 的用例还要写查询时点、主体、规则、事实、期望回执、证据检索词和已知失败模式。
+
+`calculation_basis` 是口径对照。`version_interference` 是版本干扰。`semantic eval` 会跑工具回执，并确认已知失败模式过不了门禁。门禁四项是：口径算对、版本用对、证据引用正确、工具回执完整。
+
 ## ModelPatch
 
 harness 的产出，不是 Namespace 里的对象，不要放进模型目录。

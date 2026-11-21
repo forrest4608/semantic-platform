@@ -29,7 +29,8 @@
               "GapLog",
               "CasePack",
               "EvalCase",
-              "SourceMapping"
+              "SourceMapping",
+              "Rule"
             ]
           },
           "id": { "$ref": "https://semantic.platform/schema/defs.json#/$defs/id" },

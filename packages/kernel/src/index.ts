@@ -17,6 +17,30 @@ export { diffModels } from "./diff.ts";
 export { applyPatch } from "./patch.ts";
 export { evaluateModel, type EvalCaseScore, type EvalReport } from "./eval.ts";
 export {
+  assessTeachingCase,
+  judgeKnownFailure,
+  type KnownFailureVerdict,
+  type ReleaseVerdict,
+  type TeachingAssessment,
+} from "./gate.ts";
+export { queryRuleVersion, findInForceRule, type RuleVersion, type RuleVersionQuery, type VersionStatus } from "./version.ts";
+export {
+  countByBasis,
+  getLeaveDays,
+  getLimit,
+  getTrip,
+  quoteLeave,
+  quoteLimit,
+  type CalculationReceipt,
+  type DayMark,
+  type LeaveQuoteInput,
+  type LimitQuoteInput,
+  type TripFact,
+} from "./calculate.ts";
+export { retrieveEvidence, type EvidenceHit, type EvidenceQuery } from "./evidence.ts";
+export { ingestEvalCase } from "./ingest.ts";
+export { READ_TOOL_NAMES, WRITE_TOOL_NAMES, defaultAgentTools, isWriteTool } from "./runtime-tools.ts";
+export {
   StubOsiExporter,
   type OsiExporter,
   type OsiExportDocument,

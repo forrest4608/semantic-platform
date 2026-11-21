@@ -1,0 +1,69 @@
+apiVersion: semantic.platform/v1
+kind: EvalCase
+metadata:
+  id: eval_exp_001
+  name: 餐费发票 420 元能否全额报销
+  namespace: finance
+  description: 版本干扰。业务发生在 2025 版生效当日，2022 旧规已经废止。
+spec:
+  question: 李四周三去北京、周五返回，餐费发票 420 元，能否全额报销？
+  expectedAnswer: 周三至周五共 3 个自然日，现行标准上限 300 元；发票 420 元可报 300 元，超出 120 元自理，引用《差旅报销管理办法》2025 版第 7 条。
+  expectedObjects:
+    - finance.Employee
+    - finance.Trip
+    - finance.ExpenseClaim
+    - finance.Invoice
+    - finance.meal.2025
+    - finance.SubmitExpense
+  golden: true
+  caseClass: version_interference
+  asOf: "2025-01-01"
+  subjectType: 员工
+  rule: finance.meal.2025
+  scenarioBrief: finance.brief.meal
+  evidenceQuery: 餐费
+  interferenceRules:
+    - finance.meal.2025
+    - finance.meal.2022
+  failureConditions:
+    - 检索到 100 与 150 后选用 150
+  facts:
+    employeeName: 李四
+    destination: 北京
+    spanLabel: 周三至周五
+    personCount: 1
+    invoiceAmount: 420
+    departureIncluded: true
+    returnIncluded: true
+    days:
+      - label: 周三
+        kind: working_day
+      - label: 周四
+        kind: working_day
+      - label: 周五
+        kind: working_day
+  expected:
+    basis: calendar_day
+    citation: 《差旅报销管理办法》2025 版第 7 条
+    inForce: true
+    countedDays: 3
+    unitAmount: 100
+    cap: 300
+    invoiceAmount: 420
+    reimbursable: 300
+    selfPay: 120
+  knownFailures:
+    - id: rag_choose_150
+      description: 检索到 100 与 150 后选用 150
+      trace:
+        basis: calendar_day
+        ruleId: finance.meal.2022
+        citation: 2022 旧规「短期出差包干 150 元/天」
+        countedDays: 3
+        unitAmount: 150
+        cap: 450
+        invoiceAmount: 420
+        reimbursable: 420
+        selfPay: 0
+        inForce: false
+        receiptComplete: false
