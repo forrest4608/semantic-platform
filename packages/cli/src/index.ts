@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { Command } from "commander";
-import { runDiff, runEval, runExportOsi, runValidate, type ExportTarget } from "./commands.ts";
+import { runDiff, runEval, runExportOsi, runRelease, runValidate, type ExportTarget } from "./commands.ts";
 
 const program = new Command();
 
@@ -29,6 +29,15 @@ program
   .argument("<dir>", "模型目录")
   .action((dir: string) => {
     process.exitCode = runEval(dir);
+  });
+
+program
+  .command("release")
+  .description("业务发布。未关闭缺口默认阻断。不把 Git 合并或外部工单当作发布门。")
+  .argument("<dir>", "模型目录")
+  .requiredOption("--by <name>", "发布确认人")
+  .action((dir: string, options: { by: string }) => {
+    process.exitCode = runRelease(dir, options.by);
   });
 
 program

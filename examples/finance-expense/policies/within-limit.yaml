@@ -1,0 +1,20 @@
+apiVersion: semantic.platform/v1
+kind: Policy
+metadata:
+  id: finance.policy.within_limit
+  name: 报销不得超过当时现行餐费限额
+  namespace: finance
+  description: 限额数字在 Rule 上。本策略只规定回执金额不得超过业务发生时点的现行单价。不是通用策略引擎。
+spec:
+  effect: deny
+  subjects:
+    - type: role
+      value: agent
+  resources:
+    - finance.meal.2025
+  operations:
+    - invoke
+  condition: 可报金额不得超过当时现行的餐费限额
+  check:
+    kind: within_in_force_limit
+    rule: finance.meal.2025

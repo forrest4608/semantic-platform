@@ -10,6 +10,7 @@ import {
   dumpYaml,
   evaluateModel,
   loadModel,
+  releaseModel,
   validateModel,
   type EvalReport,
   type ValidationReport,
@@ -60,6 +61,22 @@ export function runEval(dir: string, io: CommandIO = consoleIO): number {
     const report = evaluateModel(model);
     io.stdout(formatEval(report));
     return report.ok ? 0 : 1;
+  } catch (error) {
+    return fail(io, error);
+  }
+}
+
+export function runRelease(dir: string, approvedBy: string, io: CommandIO = consoleIO): number {
+  try {
+    const model = loadModel(dir);
+    const validation = validateModel(model);
+    if (!validation.ok) {
+      io.stderr(formatValidation(validation));
+      return 1;
+    }
+    const record = releaseModel(model, approvedBy);
+    io.stdout(`${JSON.stringify(record, null, 2)}\n`);
+    return 0;
   } catch (error) {
     return fail(io, error);
   }

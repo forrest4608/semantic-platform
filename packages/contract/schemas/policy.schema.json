@@ -44,14 +44,15 @@
           "type": "object",
           "additionalProperties": false,
           "required": ["kind"],
-          "description": "教学用例可核对的判断。forbid_basis 禁止某种计算基准；require_approval_when_exceeded 在引用规则的门槛被超过时才要求人；forbid_superseded 禁止把已废止规则当计算依据；human_authorization 把写回所需角色挂到 Action 上。",
+          "description": "只覆盖两个教学用例的边界，不是通用策略引擎。forbid_basis 禁止某种计算基准；require_approval_when_exceeded 在门槛被超过时才要求人；forbid_superseded 按业务发生时点禁止已废止规则；human_authorization 把写回角色挂到 Action；within_in_force_limit 要求回执金额不超过当时现行规则的限额。",
           "properties": {
             "kind": {
               "enum": [
                 "forbid_basis",
                 "require_approval_when_exceeded",
                 "forbid_superseded",
-                "human_authorization"
+                "human_authorization",
+                "within_in_force_limit"
               ]
             },
             "basis": { "enum": ["working_day", "calendar_day"] },

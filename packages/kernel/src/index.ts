@@ -16,6 +16,7 @@ export { validateModel } from "./validate.ts";
 export { diffModels } from "./diff.ts";
 export { applyPatch } from "./patch.ts";
 export { evaluateModel, type EvalCaseScore, type EvalReport } from "./eval.ts";
+export { releaseModel, type AcceptedScope, type NamespaceVersion, type ReleaseRecord } from "./release.ts";
 export {
   assessTeachingCase,
   judgeKnownFailure,
