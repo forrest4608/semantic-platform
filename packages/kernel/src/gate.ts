@@ -7,6 +7,7 @@ import { retrieveEvidence } from "./evidence.ts";
 import { isRecord, stringField, stringList } from "./model.ts";
 import type { SemanticModel } from "./types.ts";
 import { ModelError } from "./types.ts";
+import { policyViolations } from "./policy-check.ts";
 import { queryRuleVersion } from "./version.ts";
 
 export interface ReleaseVerdict {
@@ -127,8 +128,18 @@ function judgeTrace(
   fromTool: boolean,
 ): ReleaseVerdict {
   const expected = isRecord(spec.expected) ? spec.expected : {};
-  const basisCorrect = basisMatches(expected, trace);
-  const versionCorrect = versionMatches(model, spec, trace, fromTool);
+  let basisCorrect = basisMatches(expected, trace);
+  let versionCorrect = versionMatches(model, spec, trace, fromTool);
+  const asOf = stringField(spec, "asOf");
+  const subjectType = stringField(spec, "subjectType");
+  const violations = policyViolations(
+    model,
+    stringField(spec, "rule"),
+    trace,
+    asOf && subjectType ? { asOf, subjectType } : undefined,
+  );
+  if (violations.includes("forbid_basis") || violations.includes("approval")) basisCorrect = false;
+  if (violations.includes("forbid_superseded")) versionCorrect = false;
   const citationCorrect = trace.citation === expected.citation && expected.citation !== undefined;
   const receiptComplete = completeReceipt(spec, trace, fromTool);
   return {

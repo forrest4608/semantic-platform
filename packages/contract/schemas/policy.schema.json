@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://semantic.platform/schema/policy.json",
   "title": "Policy",
-  "description": "访问策略。condition 是作者文本，M0 不执行。",
+  "description": "边界与人授权。condition 仍是作者文本，不执行。check 只覆盖两个教学用例需要的结构化判断，不是通用策略引擎。",
   "type": "object",
   "additionalProperties": false,
   "required": ["apiVersion", "kind", "metadata", "spec"],
@@ -39,7 +39,31 @@
           "minItems": 1,
           "items": { "enum": ["read", "write", "invoke"] }
         },
-        "condition": { "type": "string", "minLength": 1 }
+        "condition": { "type": "string", "minLength": 1 },
+        "check": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind"],
+          "description": "教学用例可核对的判断。forbid_basis 禁止某种计算基准；require_approval_when_exceeded 在引用规则的门槛被超过时才要求人；forbid_superseded 禁止把已废止规则当计算依据；human_authorization 把写回所需角色挂到 Action 上。",
+          "properties": {
+            "kind": {
+              "enum": [
+                "forbid_basis",
+                "require_approval_when_exceeded",
+                "forbid_superseded",
+                "human_authorization"
+              ]
+            },
+            "basis": { "enum": ["working_day", "calendar_day"] },
+            "rule": { "$ref": "https://semantic.platform/schema/defs.json#/$defs/id" },
+            "action": { "$ref": "https://semantic.platform/schema/defs.json#/$defs/id" },
+            "approverRoles": {
+              "type": "array",
+              "minItems": 1,
+              "items": { "type": "string", "minLength": 1 }
+            }
+          }
+        }
       }
     }
   }

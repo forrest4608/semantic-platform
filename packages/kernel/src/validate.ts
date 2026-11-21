@@ -17,6 +17,12 @@ export function validateModel(model: SemanticModel): ValidationReport {
       }
       continue;
     }
+    if (document.kind === "Company" || document.kind === "Project") {
+      if (document.metadata.namespace !== document.metadata.id) {
+        issues.push(issue("context_identity", path, "Company 与 Project 的 metadata.namespace 必须等于自己的 id"));
+      }
+      continue;
+    }
     if (!namespaces.has(document.metadata.namespace)) {
       issues.push(issue("missing_namespace", path, `找不到 Namespace：${document.metadata.namespace}`));
     }
@@ -35,18 +41,35 @@ export function validateModel(model: SemanticModel): ValidationReport {
   for (const action of documentsOf(model, "Action")) {
     checkAction(action, entities, issues);
   }
+  const approvalRuleOwners = new Map<string, string>();
   for (const policy of documentsOf(model, "Policy")) {
     for (const resource of stringList(policy.spec.resources)) {
       if (!model.byId.has(resource)) {
         issues.push(issue("missing_resource", policy.metadata.id, `策略资源不存在：${resource}`));
       }
     }
+    checkStructuredPolicy(policy, model, issues, approvalRuleOwners);
   }
   for (const mapping of documentsOf(model, "SourceMapping")) {
     checkMapping(mapping, model, entities, issues);
   }
+  for (const project of documentsOf(model, "Project")) {
+    const companyId = stringField(project.spec, "company");
+    const company = companyId ? model.byId.get(companyId) : undefined;
+    if (!company || company.kind !== "Company") {
+      issues.push(issue("missing_company", project.metadata.id, `项目没有所属公司：${companyId ?? ""}`));
+    }
+  }
+  for (const namespace of documentsOf(model, "Namespace")) {
+    const projectId = stringField(namespace.spec, "project");
+    const project = projectId ? model.byId.get(projectId) : undefined;
+    if (!project || project.kind !== "Project") {
+      issues.push(issue("missing_project", namespace.metadata.id, `Namespace 没有所属项目：${projectId ?? ""}`));
+    }
+  }
   for (const brief of documentsOf(model, "ScenarioBrief")) {
     checkGoals(brief, issues);
+    checkBriefProject(brief, model, issues);
   }
   const goalIds = collectGoalIds(model);
   for (const gap of documentsOf(model, "GapLog")) {
@@ -141,6 +164,21 @@ function checkMapping(
   }
 }
 
+function checkBriefProject(brief: SemanticDocument, model: SemanticModel, issues: ValidationIssue[]): void {
+  const projectId = stringField(brief.spec, "project");
+  const project = projectId ? model.byId.get(projectId) : undefined;
+  if (!project || project.kind !== "Project") {
+    issues.push(issue("missing_project", brief.metadata.id, `场景没有所属项目：${projectId ?? ""}`));
+    return;
+  }
+  const namespace = model.byId.get(brief.metadata.namespace);
+  const namespaceProject =
+    namespace && namespace.kind === "Namespace" ? stringField(namespace.spec, "project") : undefined;
+  if (namespaceProject && namespaceProject !== projectId) {
+    issues.push(issue("project_mismatch", brief.metadata.id, "场景简报必须和所在 Namespace 属于同一个项目"));
+  }
+}
+
 function checkGoals(brief: SemanticDocument, issues: ValidationIssue[]): void {
   const seen = new Set<string>();
   const goals = Array.isArray(brief.spec.goals) ? brief.spec.goals : [];
@@ -194,6 +232,89 @@ function checkCasePack(
     checkExpectedObjects(pack.metadata.id, item.expectedObjects, model, issues);
     checkEvalGate(pack.metadata.id, item, model, issues);
   }
+}
+
+function checkStructuredPolicy(
+  policy: SemanticDocument,
+  model: SemanticModel,
+  issues: ValidationIssue[],
+  approvalRuleOwners: Map<string, string>,
+): void {
+  if (!isRecord(policy.spec.check)) return;
+  const check = policy.spec.check;
+  const kind = stringField(check, "kind");
+  const ruleId = stringField(check, "rule");
+  const actionId = stringField(check, "action");
+  if (kind === "forbid_basis") {
+    const rule = requirePolicyRule(model, policy, ruleId, issues);
+    const basis = stringField(check, "basis");
+    if (rule && basis !== "working_day" && basis !== "calendar_day") {
+      issues.push(issue("policy_check", policy.metadata.id, "禁止计算基准的策略必须写明基准"));
+    }
+    return;
+  }
+  if (kind === "require_approval_when_exceeded") {
+    const rule = requirePolicyRule(model, policy, ruleId, issues);
+    if (rule && !isRecord(rule.spec.threshold)) {
+      issues.push(issue("policy_check", policy.metadata.id, "人事审批策略引用的规则没有门槛"));
+    }
+    if (stringList(check.approverRoles).length === 0) {
+      issues.push(issue("policy_check", policy.metadata.id, "人事审批策略必须写明审批角色"));
+    }
+    if (ruleId) {
+      const owner = approvalRuleOwners.get(ruleId);
+      if (owner) {
+        issues.push(issue("policy_check", policy.metadata.id, `同一规则的人事审批策略重复：${owner}`));
+      } else {
+        approvalRuleOwners.set(ruleId, policy.metadata.id);
+      }
+    }
+    return;
+  }
+  if (kind === "forbid_superseded") {
+    const rule = requirePolicyRule(model, policy, ruleId, issues);
+    if (rule && !stringField(rule.spec, "supersededAt") && !stringField(rule.spec, "replacedBy")) {
+      issues.push(issue("policy_check", policy.metadata.id, "禁止废止版本的策略必须指向已废止规则"));
+    }
+    return;
+  }
+  if (kind === "human_authorization") {
+    const action = actionId ? model.byId.get(actionId) : undefined;
+    if (!action || action.kind !== "Action") {
+      issues.push(issue("policy_check", policy.metadata.id, `人授权策略没有指向动作：${actionId ?? ""}`));
+      return;
+    }
+    const approval = isRecord(action.spec.approval) ? action.spec.approval : undefined;
+    if (approval?.required !== true) {
+      issues.push(issue("policy_check", policy.metadata.id, "人授权策略指向的动作必须保留审批钩子"));
+    }
+    const policyRoles = stringList(check.approverRoles);
+    const actionRoles = stringList(approval?.approverRoles);
+    if (policyRoles.length === 0 || !sameRoles(policyRoles, actionRoles)) {
+      issues.push(issue("policy_check", policy.metadata.id, "人授权角色必须与 Action 的审批角色一致"));
+    }
+  }
+}
+
+function requirePolicyRule(
+  model: SemanticModel,
+  policy: SemanticDocument,
+  ruleId: string | undefined,
+  issues: ValidationIssue[],
+): SemanticDocument | undefined {
+  const rule = ruleId ? model.byId.get(ruleId) : undefined;
+  if (!rule || rule.kind !== "Rule") {
+    issues.push(issue("policy_check", policy.metadata.id, `策略没有指向规则：${ruleId ?? ""}`));
+    return undefined;
+  }
+  return rule;
+}
+
+function sameRoles(left: string[], right: string[]): boolean {
+  if (left.length !== right.length) return false;
+  const sortedLeft = [...left].sort();
+  const sortedRight = [...right].sort();
+  return sortedLeft.every((role, index) => role === sortedRight[index]);
 }
 
 function checkRule(rule: SemanticDocument, model: SemanticModel, issues: ValidationIssue[]): void {

@@ -13,6 +13,8 @@ spec:
     - hr.leave.LeaveRequest
     - hr.leave.remaining_leave_days
     - hr.leave.rule.approval
+    - hr.leave.policy.working_day_basis
+    - hr.leave.policy.hr_approval
     - hr.leave.ApproveLeave
   golden: true
   caseClass: calculation_basis

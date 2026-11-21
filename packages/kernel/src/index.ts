@@ -39,6 +39,7 @@ export {
 } from "./calculate.ts";
 export { retrieveEvidence, type EvidenceHit, type EvidenceQuery } from "./evidence.ts";
 export { ingestEvalCase } from "./ingest.ts";
+export { approvalRequiredByPolicy, policyViolations, type PolicyTrace } from "./policy-check.ts";
 export { READ_TOOL_NAMES, WRITE_TOOL_NAMES, defaultAgentTools, isWriteTool } from "./runtime-tools.ts";
 export {
   StubOsiExporter,
